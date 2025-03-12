@@ -95,7 +95,7 @@ export const useUserStore = defineStore('user', () => {
       const user = authData?.user
 
       // Calculate ELO range (current ELO ± 40)
-      const minElo = Math.max(400, currentElo.value - 40)
+      const minElo = Math.max(300, currentElo.value - 40)
       const maxElo = Math.max(450, currentElo.value + 40)
 
       if (user) {
@@ -109,7 +109,7 @@ export const useUserStore = defineStore('user', () => {
           .select('*')
           .gte('Rating', minElo)
           .lte('Rating', maxElo)
-          .not('PuzzleId', 'in', `(${attemptedPuzzles?.map((p) => `'${p.puzzle_id}'`).join(',')})`)
+          .not('PuzzleId', 'in', `(${attemptedPuzzles?.map((p) => `"${p.puzzle_id}"`).join(',')})`)
           .limit(1)
           .single()
 
