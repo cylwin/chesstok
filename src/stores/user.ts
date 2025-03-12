@@ -95,8 +95,8 @@ export const useUserStore = defineStore('user', () => {
       const user = authData?.user
 
       // Calculate ELO range (current ELO ± 40)
-      const minElo = Math.max(100, currentElo.value - 40)
-      const maxElo = currentElo.value + 40
+      const minElo = Math.max(400, currentElo.value - 40)
+      const maxElo = Math.max(450, currentElo.value + 40)
 
       if (user) {
         const { data: attemptedPuzzles, error: attemptedError } = await supabase
