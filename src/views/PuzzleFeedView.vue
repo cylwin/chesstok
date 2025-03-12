@@ -145,31 +145,10 @@ onMounted(async () => {
   </div>
 
   <!-- Player & Puzzle Info -->
-  <div class="p-5 flex justify-between">
+  <div class="px-5 flex justify-between">
     <div class="flex items-center">
       <div>
         <UserEloBadge :elo="userStore.currentElo" />
-      </div>
-    </div>
-    <div class="px-5 pt-4 pb-2">
-      <div class="timer rounded-lg p-3 flex justify-center items-center glowing-border">
-        <div class="text-2xl font-bold text-slate-800 flex items-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4 mr-1.5 text-slate-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>17:03</span>
-        </div>
       </div>
     </div>
     <div class="flex items-center">
@@ -194,6 +173,27 @@ onMounted(async () => {
             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
           />
         </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pb-1">
+    <div class="timer rounded-lg flex justify-center items-center glowing-border">
+      <div class="text-xl font-bold text-slate-800 flex items-center">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 mr-1.5 text-slate-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>17:03</span>
       </div>
     </div>
   </div>

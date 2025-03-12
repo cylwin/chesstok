@@ -264,7 +264,7 @@ function resetTimer() {
 <template>
   <div class="relative w-full max-w-[600px] mx-auto">
     <!-- Chess Board -->
-    <div class="px-5 py-3">
+    <div class="px-5 pb-3">
       <div class="chess-board rounded-xl relative">
         <div
           class="absolute top-0 left-0 w-full h-full rounded-xl border-4 border-slate-800 z-10 pointer-events-none"
