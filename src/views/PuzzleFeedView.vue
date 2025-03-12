@@ -62,7 +62,7 @@ const progressPercentage = computed(() => {
 
 function handlePuzzleSolved(rating: number, newElo: number, eloChange: number) {
   // Handle when puzzle is correctly solved
-  feedbackMessage.value = `Correct! Elo: ${newElo} (${eloChange > 0 ? '+' : ''}${eloChange})`
+  feedbackMessage.value = `Correct!`
   feedbackType.value = 'success'
   showFeedback.value = true
 
@@ -74,7 +74,7 @@ function handlePuzzleSolved(rating: number, newElo: number, eloChange: number) {
 
 function handlePuzzleFailed(rating: number, newElo: number, eloChange: number) {
   // Handle when puzzle is incorrectly solved
-  feedbackMessage.value = `Incorrect! Elo: ${newElo} (${eloChange > 0 ? '+' : ''}${eloChange})`
+  feedbackMessage.value = `Incorrect!`
   feedbackType.value = 'error'
   showFeedback.value = true
 

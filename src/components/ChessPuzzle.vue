@@ -277,34 +277,6 @@ function resetTimer() {
         />
       </div>
     </div>
-
-    <!-- Success message -->
-    <div
-      v-if="isSolved"
-      class="mt-4 py-2 px-4 bg-green-100 text-green-800 rounded-md text-center font-bold"
-    >
-      <p>Congratulations! Puzzle solved!</p>
-      <p v-if="newElo !== null" class="text-sm">
-        New Elo: {{ newElo }}
-        <span :class="eloChange > 0 ? 'text-green-600' : 'text-red-600'"
-          >({{ eloChange > 0 ? '+' : '' }}{{ eloChange }})</span
-        >
-      </p>
-    </div>
-
-    <!-- Failure message -->
-    <div
-      v-if="isFailed"
-      class="mt-4 py-2 px-4 bg-red-100 text-red-800 rounded-md text-center font-bold"
-    >
-      <p>Wrong move! Try again next time.</p>
-      <p v-if="newElo !== null" class="text-sm">
-        New Elo: {{ newElo }}
-        <span :class="eloChange > 0 ? 'text-green-600' : 'text-red-600'"
-          >({{ eloChange > 0 ? '+' : '' }}{{ eloChange }})</span
-        >
-      </p>
-    </div>
   </div>
 </template>
 
