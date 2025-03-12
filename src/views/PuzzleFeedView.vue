@@ -176,7 +176,23 @@ onMounted(async () => {
       </div>
     </div>
   </div>
-  <div class="pb-1">
+  <div class="mt-1 py-1 px-5 flex justify-between">
+    <div>
+      <div
+        v-if="fen"
+        class="instruction-box text-center font-bold text-md text-slate-800 bg-yellow-100 py-1 px-2 rounded-lg shadow-inner border border-yellow-200 flex items-center"
+      >
+        <div
+          class="w-4 h-4 bg-white rounded-md border border-slate-300 mr-2"
+          v-if="getOrientationFromFen === 'black'"
+        ></div>
+        <div
+          class="w-4 h-4 bg-black rounded-md border border-slate-300 mr-2"
+          v-else-if="getOrientationFromFen === 'white'"
+        ></div>
+        {{ getOrientationFromFen === 'white' ? 'Black' : 'White' }} to move
+      </div>
+    </div>
     <div class="timer rounded-lg flex justify-center items-center glowing-border">
       <div class="text-xl font-bold text-slate-800 flex items-center">
         <svg
@@ -222,15 +238,6 @@ onMounted(async () => {
       @failed="handlePuzzleFailed"
       v-if="fen"
     />
-  </div>
-
-  <!-- Instructions -->
-  <div class="px-5 py-3" v-if="fen">
-    <div
-      class="instruction-box text-center font-bold text-lg text-slate-800 bg-yellow-100 py-2 px-4 rounded-lg shadow-inner border border-yellow-200"
-    >
-      {{ getOrientationFromFen === 'white' ? 'Black' : 'White' }} to move and win
-    </div>
   </div>
 
   <!-- Progress Bar -->
