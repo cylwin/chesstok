@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { supabase } from '@/services/supabase'
 
@@ -18,6 +18,10 @@ onMounted(async () => {
     console.log('Existing session found, using current user')
   }
 })
+const route = useRoute()
+const isHomeView = computed(() => {
+  return route.name === 'home'
+})
 </script>
 
 <template>
@@ -26,6 +30,7 @@ onMounted(async () => {
     <div class="app-container min-h-screen overflow-hidden">
       <div
         class="top-bar bg-gradient-to-r from-[#6366F1] to-purple-500 text-white p-4 flex justify-between items-center relative"
+        v-if="!isHomeView"
       >
         <div class="flex items-center">
           <svg

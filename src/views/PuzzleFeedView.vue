@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import ChessPuzzle from '../components/ChessPuzzle.vue'
 import UserEloBadge from '../components/UserEloBadge.vue'
 import StreakFlame from '../components/StreakFlame.vue'
+import ProgressBar from '../components/ProgressBar.vue'
 import { supabase } from '../services/supabase'
 import { useUserStore, useTimerStore } from '@/stores'
 
@@ -257,17 +258,13 @@ onMounted(async () => {
 
   <!-- Progress Bar -->
   <div class="flex px-5 pb-8 items-start">
-    <div class="progress-container flex-1 pt-6 pr-4">
-      <div class="w-full bg-slate-200 rounded-full h-3 shadow-inner">
-        <div class="progress-bar" :style="{ width: `${progressPercentage}%` }"></div>
-      </div>
-      <div class="flex justify-between mt-1 font-black">
-        <span class="text-slate-600">DAILY PROGRESS</span>
-        <span class="text-primary" v-if="dailyProgress.completed < dailyProgress.total"
-          >{{ dailyProgress.completed }}/{{ dailyProgress.total }} PUZZLES</span
-        >
-        <span class="text-primary" v-else>COMPLETED</span>
-      </div>
+    <div class="flex-1 pt-6 pr-4">
+      <ProgressBar
+        :completed="dailyProgress.completed"
+        :total="dailyProgress.total"
+        label="DAILY PROGRESS"
+        suffix="PUZZLES"
+      />
     </div>
     <StreakFlame :currentStreak="userStore.currentStreak" :thresholds="streakThresholds" />
   </div>
