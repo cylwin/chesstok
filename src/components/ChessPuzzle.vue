@@ -4,7 +4,7 @@ import { TheChessboard } from 'vue3-chessboard'
 import 'vue3-chessboard/style.css'
 import type { BoardApi, BoardConfig } from 'vue3-chessboard'
 import { useUserStore } from '@/stores'
-import futuristicMove from '@/assets/sounds/futuristic_Move.mp3'
+import standardMove from '@/assets/sounds/standard_Move.mp3'
 import ringtoneCorrect from '@/assets/sounds/ringtone-correct.mp3'
 import boinkWrong from '@/assets/sounds/boink-wrong.mp3'
 const props = defineProps<{
@@ -110,7 +110,7 @@ watch(() => props.fen, updateBoardFromProps)
 watch(() => props.winningMove, updateBoardFromProps)
 
 const SOUNDS = {
-  move: new Audio(futuristicMove),
+  move: new Audio(standardMove),
   correct: new Audio(ringtoneCorrect),
   incorrect: new Audio(boinkWrong),
   // epic_fail: new Audio('/sounds/epic_fail.mp3'),

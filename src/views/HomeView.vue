@@ -42,7 +42,7 @@ const goToPuzzles = () => {
     <div class="mt-8 mb-4 px-4">
       <WeeklyProgress />
     </div>
-    <div class="flex px-5">
+    <div class="flex px-5 mb-4">
       <ActionButton type="hint" label="STATS" @click="goToPuzzles" />
     </div>
   </div>
