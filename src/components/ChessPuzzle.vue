@@ -4,7 +4,9 @@ import { TheChessboard } from 'vue3-chessboard'
 import 'vue3-chessboard/style.css'
 import type { BoardApi, BoardConfig } from 'vue3-chessboard'
 import { useUserStore } from '@/stores'
-
+import futuristicMove from '@/assets/sounds/futuristic_Move.mp3'
+import ringtoneCorrect from '@/assets/sounds/ringtone-correct.mp3'
+import boinkWrong from '@/assets/sounds/boink-wrong.mp3'
 const props = defineProps<{
   // FEN string representing the puzzle position
   fen: string
@@ -46,6 +48,8 @@ const newElo = ref<number | null>(null)
 const eloChange = ref<number>(0)
 // Track if the user used a hint
 const usedHint = ref<boolean>(false)
+// Track if the user used the solution
+const usedSolution = ref<boolean>(false)
 
 // Configure the chessboard
 const boardConfig = ref<BoardConfig>({
@@ -103,6 +107,20 @@ onBeforeUnmount(() => {
 watch(() => props.fen, updateBoardFromProps)
 watch(() => props.winningMove, updateBoardFromProps)
 
+const SOUNDS = {
+  move: new Audio(futuristicMove),
+  correct: new Audio(ringtoneCorrect),
+  incorrect: new Audio(boinkWrong),
+  // epic_fail: new Audio('/sounds/epic_fail.mp3'),
+}
+
+function playSound(sound: keyof typeof SOUNDS) {
+  const audio = SOUNDS[sound]
+  if (audio) {
+    audio.play()
+  }
+}
+
 // Set up the board with the provided FEN and orientation
 function updateBoardFromProps() {
   isSolved.value = false
@@ -125,6 +143,7 @@ function updateBoardFromProps() {
   const move = props.winningMove.split(' ')[0]
   setTimeout(() => {
     boardAPI.value?.move(move)
+    playSound('move')
   }, 400)
 
   boardConfig.value.movable = {
@@ -138,8 +157,9 @@ function updateBoardFromProps() {
 
 // Function to show hint by highlighting the piece to move
 function showHint() {
+  console.log('showHint')
   if (!boardAPI.value || isSolved.value) return
-
+  console.log({ usedHint: usedHint.value })
   usedHint.value = true
   // The winning move is in format like "e2e4"
   // The first two characters represent the source square
@@ -149,6 +169,16 @@ function showHint() {
   clearHints()
 
   boardAPI.value.drawMove(sourceSquare as any, sourceSquare as any, 'green')
+  console.log('showHint done')
+}
+
+function showSolution() {
+  if (!boardAPI.value) return
+  const sourceSquare = props.winningMove.split(' ')[1].substring(0, 2)
+  const targetSquare = props.winningMove.split(' ')[1].substring(2, 4)
+
+  clearHints()
+  boardAPI.value.drawMove(sourceSquare as any, targetSquare as any, 'green')
 }
 
 // Function to clear hints
@@ -165,19 +195,12 @@ function checkWinningMove(from: any, to: any, capture: any) {
   const history = boardAPI.value.getHistory()
   if (history.length === 0) return
 
-  const lastMove = history[history.length - 1]
-  console.log({ lastMove })
-  console.log({
-    move: from + to,
-    winningMove: props.winningMove,
-  })
-
   // Check if the move matches the winning move
   if (from + to === props.winningMove.split(' ')[1]) {
     // Correct move!
     isSolved.value = true
     stopTimer() // Stop the timer on success
-
+    playSound('correct')
     // Calculate Elo change using the user store
     const oldElo = userStore.currentElo
     const currentNewElo = userStore.updateEloAfterPuzzle(
@@ -185,6 +208,7 @@ function checkWinningMove(from: any, to: any, capture: any) {
       props.puzzleRating,
       true,
       usedHint.value,
+      usedSolution.value,
       elapsedTime.value,
     )
     newElo.value = currentNewElo
@@ -201,7 +225,7 @@ function checkWinningMove(from: any, to: any, capture: any) {
     // Wrong move!
     isFailed.value = true
     stopTimer() // Stop the timer on failure
-
+    playSound('incorrect')
     // Calculate Elo change using the user store
     const oldElo = userStore.currentElo
     const currentNewElo = userStore.updateEloAfterPuzzle(
@@ -209,18 +233,36 @@ function checkWinningMove(from: any, to: any, capture: any) {
       props.puzzleRating,
       false,
       usedHint.value,
+      usedSolution.value,
       elapsedTime.value,
     )
+    console.log('userStore.updateEloAfterPuzzle result : ', { currentNewElo })
     newElo.value = currentNewElo
     eloChange.value = currentNewElo - oldElo
 
-    // Emit failed event with puzzle rating and new Elo
     emit('failed', props.puzzleRating, currentNewElo, eloChange.value)
-
-    // Wait 1.5 seconds before emitting next
-    setTimeout(() => {
-      emit('next')
-    }, 1500)
+    console.log({ usedHint: usedHint.value, usedSolution: usedSolution.value })
+    if (!usedHint.value) {
+      setTimeout(() => {
+        updateBoardFromProps()
+        usedHint.value = true
+        setTimeout(() => {
+          showHint()
+        }, 500)
+      }, 1500)
+    } else if (!usedSolution.value) {
+      setTimeout(() => {
+        updateBoardFromProps()
+        usedSolution.value = true
+        setTimeout(() => {
+          showSolution()
+        }, 500)
+      }, 1500)
+    } else {
+      setTimeout(() => {
+        emit('next')
+      }, 1500)
+    }
   }
 }
 

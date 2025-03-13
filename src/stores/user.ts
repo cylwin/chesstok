@@ -155,6 +155,7 @@ export const useUserStore = defineStore('user', () => {
    * @param newElo - User's ELO after attempt
    * @param outcome - Result of the attempt (correct/incorrect)
    * @param usedHint - Whether the user used a hint
+   * @param usedSolution - Whether the user used the solution
    * @param timeToSolve - Time taken to solve in milliseconds
    * @returns Promise with the insert result
    */
@@ -164,9 +165,11 @@ export const useUserStore = defineStore('user', () => {
     newElo: number,
     outcome: 'correct' | 'incorrect' | 'skipped',
     usedHint: boolean,
+    usedSolution: boolean,
     timeToSolve: number,
   ): Promise<void> {
     try {
+      console.log('logPuzzleAttempt')
       // Get current user
       const {
         data: { user },
@@ -184,6 +187,7 @@ export const useUserStore = defineStore('user', () => {
         new_elo: newElo,
         outcome: outcome,
         used_hint: usedHint,
+        used_solution: usedSolution,
         time_to_solve: Math.round(timeToSolve),
       })
 
@@ -208,18 +212,24 @@ export const useUserStore = defineStore('user', () => {
     puzzleRating: number,
     isCorrect: boolean,
     usedHint: boolean = false,
+    usedSolution: boolean = false,
     timeToSolve: number = 0,
   ): number {
+    console.log('updateEloAfterPuzzle')
     const initialElo = currentElo.value
     const expectedScore = calculateExpectedScore(initialElo, puzzleRating)
     const actualScore = isCorrect ? 1 : 0
-    const newElo = calculateNewElo(initialElo, expectedScore, actualScore)
-
+    let newElo = calculateNewElo(initialElo, expectedScore, actualScore)
+    if (usedHint || usedSolution) {
+      newElo = initialElo
+    } else {
+      puzzlesAttempted.value++
+    }
+    console.log({ usedHint, usedSolution, newElo, initialElo })
     // Update user stats
     currentElo.value = newElo
-    puzzlesAttempted.value++
 
-    if (isCorrect) {
+    if (isCorrect && !usedHint && !usedSolution) {
       puzzlesSolved.value++
       dailyChallenge.value++
       currentStreak.value++
@@ -239,31 +249,11 @@ export const useUserStore = defineStore('user', () => {
       newElo,
       isCorrect ? 'correct' : 'incorrect',
       usedHint,
+      usedSolution,
       timeToSolve,
     )
 
     return newElo
-  }
-
-  /**
-   * Skip the current puzzle (no Elo change)
-   * @param puzzleId - ID of the puzzle being skipped
-   * @param puzzleRating - Rating of the puzzle being skipped
-   */
-  async function skipPuzzle(puzzleId: string, puzzleRating: number): Promise<void> {
-    // Reset streak when skipping
-    currentStreak.value = 0
-    puzzlesAttempted.value++
-
-    // Log the skipped attempt
-    await logPuzzleAttempt(
-      puzzleId,
-      currentElo.value,
-      currentElo.value, // No ELO change when skipping
-      'skipped',
-      false,
-      0,
-    )
   }
 
   /**
@@ -297,7 +287,6 @@ export const useUserStore = defineStore('user', () => {
 
     // Actions
     updateEloAfterPuzzle,
-    skipPuzzle,
     resetStats,
     signInAnonymously,
     logPuzzleAttempt,
