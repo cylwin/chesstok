@@ -16,6 +16,8 @@ const props = defineProps<{
   puzzleId: string
   // Puzzle rating (Elo) for calculating user's Elo change
   puzzleRating: number
+  // Border color for the board
+  borderColor: string
 }>()
 
 // Timer state
@@ -219,8 +221,10 @@ function checkWinningMove(from: any, to: any, capture: any) {
 
     // Wait 1.5 seconds before emitting next
     setTimeout(() => {
+      usedHint.value = false
+      usedSolution.value = false
       emit('next')
-    }, 1500)
+    }, 700)
   } else {
     // Wrong move!
     isFailed.value = true
@@ -307,9 +311,21 @@ function resetTimer() {
   <div class="relative w-full max-w-[600px] mx-auto">
     <!-- Chess Board -->
     <div class="px-5 pb-3">
-      <div class="chess-board rounded-xl relative">
+      <div
+        class="chess-board rounded-xl relative"
+        :class="{
+          'shadow-green-500/50 shadow-md': props.borderColor === 'green',
+          'shadow-red-500/50 shadow-md': props.borderColor === 'red',
+          'shadow-slate-700/30 shadow-sm': props.borderColor === 'black',
+        }"
+      >
         <div
-          class="absolute top-0 left-0 w-full h-full rounded-xl border-4 border-slate-800 z-10 pointer-events-none"
+          class="absolute top-0 left-0 w-full h-full rounded-xl border-4 z-10 pointer-events-none"
+          :class="{
+            'border-green-500 shadow-green-500/20 shadow-sm': props.borderColor === 'green',
+            'border-red-500 shadow-red-500/20 shadow-sm': props.borderColor === 'red',
+            'border-slate-700 shadow-slate-700/20 shadow-sm': props.borderColor === 'black',
+          }"
         ></div>
         <TheChessboard
           class="rounded-xl"

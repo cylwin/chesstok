@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import ChessPuzzle from '../components/ChessPuzzle.vue'
-import ActionButton from '../components/ActionButton.vue'
 import UserEloBadge from '../components/UserEloBadge.vue'
+import StreakFlame from '../components/StreakFlame.vue'
 import { supabase } from '../services/supabase'
-import { useUserStore } from '@/stores'
+import { useUserStore, useTimerStore } from '@/stores'
 
 // Example puzzle with white to play and win
 const fen = ref('')
@@ -21,6 +21,7 @@ const showFeedback = ref(false)
 const feedbackType = ref<'success' | 'error' | 'info'>('info')
 
 const userStore = useUserStore()
+const timerStore = useTimerStore()
 
 // Get the orientation based on whose turn it is in the FEN
 const getOrientationFromFen = computed(() => {
@@ -31,18 +32,8 @@ const getOrientationFromFen = computed(() => {
   return activeColor === 'w' ? 'white' : 'black'
 })
 
-// Computed properties for streak display
-const streakSegments = computed(() => {
-  const segments = []
-  const maxSegments = 5
-  const currentStreak = userStore.currentStreak
-
-  for (let i = 0; i < maxSegments; i++) {
-    segments.push(i < currentStreak)
-  }
-
-  return segments
-})
+// Define streak thresholds for the flame images
+const streakThresholds = [5, 15, 30]
 
 // Computed property for daily progress
 const dailyProgress = computed(() => {
@@ -61,6 +52,9 @@ const progressPercentage = computed(() => {
 })
 
 function handlePuzzleSolved(rating: number, newElo: number, eloChange: number) {
+  // Record puzzle completion time
+  const solveTime = timerStore.recordPuzzleCompletion()
+
   // Handle when puzzle is correctly solved
   feedbackMessage.value = `Correct!`
   feedbackType.value = 'success'
@@ -73,6 +67,9 @@ function handlePuzzleSolved(rating: number, newElo: number, eloChange: number) {
 }
 
 function handlePuzzleFailed(rating: number, newElo: number, eloChange: number) {
+  // Record puzzle attempt time
+  const solveTime = timerStore.recordPuzzleCompletion()
+
   // Handle when puzzle is incorrectly solved
   feedbackMessage.value = `Incorrect!`
   feedbackType.value = 'error'
@@ -85,10 +82,8 @@ function handlePuzzleFailed(rating: number, newElo: number, eloChange: number) {
 }
 
 async function getNewPuzzle() {
-  //fen.value = ''
-  //winningMove.value = ''
-  //puzzleRating.value = 0
-  //currentPuzzleId.value = ''
+  // Start a new puzzle timer
+  timerStore.startNewPuzzle()
 
   const data = await userStore.getNewPuzzle()
   console.log(data)
@@ -118,34 +113,14 @@ async function getNewPuzzle() {
 }
 
 onMounted(async () => {
+  timerStore.startNewPuzzle()
   getNewPuzzle()
 })
 </script>
 
 <template>
-  <!-- Streak Bar -->
-  <div class="p-5 bg-white border-b border-slate-100 chess-pattern">
-    <div class="flex justify-between items-center mb-3">
-      <span class="text-sm font-black text-slate-700">CURRENT STREAK</span>
-      <span class="text-sm font-black text-primary">{{ userStore.currentStreak }}/5</span>
-    </div>
-    <div class="flex justify-center">
-      <div
-        v-for="(active, index) in streakSegments"
-        :key="index"
-        :class="[
-          'streak-segment',
-          active
-            ? 'bg-gradient-to-r from-[#10B981] to-teal-400 shadow-md'
-            : 'bg-slate-200 shadow-inner',
-          index === userStore.currentStreak - 1 ? 'pulse' : '',
-        ]"
-      ></div>
-    </div>
-  </div>
-
   <!-- Player & Puzzle Info -->
-  <div class="px-5 flex justify-between">
+  <div class="px-5 mt-4 flex justify-between">
     <div class="flex items-center">
       <div>
         <UserEloBadge :elo="userStore.currentElo" />
@@ -177,7 +152,7 @@ onMounted(async () => {
     </div>
   </div>
   <div class="mt-1 py-1 px-5 flex justify-between">
-    <div>
+    <div v-if="!showFeedback">
       <div
         v-if="fen"
         class="instruction-box text-center font-bold text-md text-slate-800 bg-yellow-100 py-1 px-2 rounded-lg shadow-inner border border-yellow-200 flex items-center"
@@ -193,8 +168,50 @@ onMounted(async () => {
         {{ getOrientationFromFen === 'white' ? 'Black' : 'White' }} to move
       </div>
     </div>
-    <div class="timer rounded-lg flex justify-center items-center glowing-border">
-      <div class="text-xl font-bold text-slate-800 flex items-center">
+    <div
+      v-if="showFeedback"
+      class="text-center font-bold text-md text-white py-1 px-2 rounded-lg shadow-inner border flex items-center justify-center gap-2"
+      :class="{
+        'bg-gradient-to-r from-green-500 to-green-400 border-green-700 shadow-green-500/30':
+          feedbackType === 'success',
+        'bg-gradient-to-r from-red-500 to-red-400 border-red-700 shadow-red-500/30':
+          feedbackType === 'error',
+        'bg-gradient-to-r from-blue-500 to-blue-400 border-blue-700 shadow-blue-500/30':
+          feedbackType === 'info',
+      }"
+    >
+      <svg
+        v-if="feedbackType === 'success'"
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      <svg
+        v-if="feedbackType === 'error'"
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      {{ feedbackMessage }}
+    </div>
+    <div
+      class="timer rounded-lg flex justify-center items-center bg-slate-100 py-1 px-2 shadow-sm shadow-slate-300/30"
+    >
+      <div class="text-md font-bold text-slate-800 flex items-center">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="h-4 w-4 mr-1.5 text-slate-600"
@@ -209,30 +226,28 @@ onMounted(async () => {
             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <span>17:03</span>
+        <span>{{ timerStore.formattedTime }}</span>
       </div>
     </div>
   </div>
 
   <!-- Chess Puzzle Component -->
   <div class="relative">
-    <div
-      v-if="showFeedback"
-      class="absolute top-32 left-1/2 transform -translate-x-1/2 px-8 text-2xl py-4 rounded-lg shadow-lg text-white font-bold z-20"
-      :class="{
-        'bg-green-500': feedbackType === 'success',
-        'bg-red-500': feedbackType === 'error',
-        'bg-blue-500': feedbackType === 'info',
-      }"
-    >
-      {{ feedbackMessage }}
-    </div>
     <ChessPuzzle
       ref="puzzleRef"
       :fen="fen"
       :winning-move="winningMove"
       :puzzle-rating="puzzleRating"
       :puzzle-id="currentPuzzleId"
+      :borderColor="
+        showFeedback
+          ? feedbackType === 'success'
+            ? 'green'
+            : feedbackType === 'error'
+              ? 'red'
+              : 'black'
+          : 'black'
+      "
       @next="getNewPuzzle"
       @solved="handlePuzzleSolved"
       @failed="handlePuzzleFailed"
@@ -241,17 +256,20 @@ onMounted(async () => {
   </div>
 
   <!-- Progress Bar -->
-  <div class="px-5 pb-8 progress-container">
-    <div class="w-full bg-slate-200 rounded-full h-3 shadow-inner">
-      <div class="progress-bar" :style="{ width: `${progressPercentage}%` }"></div>
+  <div class="flex px-5 pb-8 items-start">
+    <div class="progress-container flex-1 pt-6 pr-4">
+      <div class="w-full bg-slate-200 rounded-full h-3 shadow-inner">
+        <div class="progress-bar" :style="{ width: `${progressPercentage}%` }"></div>
+      </div>
+      <div class="flex justify-between mt-1 font-black">
+        <span class="text-slate-600">DAILY PROGRESS</span>
+        <span class="text-primary" v-if="dailyProgress.completed < dailyProgress.total"
+          >{{ dailyProgress.completed }}/{{ dailyProgress.total }} PUZZLES</span
+        >
+        <span class="text-primary" v-else>COMPLETED</span>
+      </div>
     </div>
-    <div class="flex justify-between mt-3 font-black">
-      <span class="text-slate-600">DAILY PROGRESS</span>
-      <span class="text-primary" v-if="dailyProgress.completed < dailyProgress.total"
-        >{{ dailyProgress.completed }}/{{ dailyProgress.total }} PUZZLES</span
-      >
-      <span class="text-primary" v-else>COMPLETED</span>
-    </div>
+    <StreakFlame :currentStreak="userStore.currentStreak" :thresholds="streakThresholds" />
   </div>
 </template>
 
@@ -294,39 +312,6 @@ onMounted(async () => {
   width: 100px;
   height: 100px;
   transform: rotate(-20deg);
-}
-
-.streak-segment {
-  width: 24px;
-  height: 10px;
-  border-radius: 5px;
-  margin: 0 3px;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.streak-segment::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  transform: translateX(-100%);
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
 }
 
 .chess-pattern {
@@ -510,19 +495,9 @@ onMounted(async () => {
   transform: rotate(-15deg);
 }
 
-.pulse {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
-  }
+@keyframes shimmer {
   100% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+    transform: translateX(100%);
   }
 }
 </style>

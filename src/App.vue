@@ -42,7 +42,7 @@ onMounted(async () => {
               d="M11 17l-5-5m0 0l5-5m-5 5h12"
             />
           </svg>
-          <span class="font-extrabold text-xl tracking-tight">ChessPulse</span>
+          <span class="font-extrabold text-xl tracking-wide">ChessTok</span>
         </div>
       </div>
 
