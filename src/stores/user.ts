@@ -52,7 +52,6 @@ export const useUserStore = defineStore("user", () => {
         daily_challenge_last_day_completed: null,
       }).select("*").single();
     }
-
     // If user profile data exists, update local state
     if (userProfile) {
       // Check if daily challenge streak should be reset
@@ -76,8 +75,9 @@ export const useUserStore = defineStore("user", () => {
           dailyChallenge.value = userProfile.daily_challenge_streak || 0;
         }
       }
-
+      const correctAttempts = await getCorrectAttempts();
       // Update other user stats from database
+      dailyChallenge.value = correctAttempts;
       currentElo.value = userProfile.elo || INITIAL_ELO;
       currentStreak.value = userProfile.current_streak || 0;
       highestStreak.value = userProfile.highest_streak || 0;
@@ -92,43 +92,55 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
+  const getCorrectAttempts = async () => {
+    const { data: correctAttempts } = await supabase.from("puzzle_attempts")
+      .select("*")
+      .eq("outcome", "correct")
+      .gte("created_at", dayjs().startOf("day").toISOString());
+    return correctAttempts?.length || 0;
+  };
+
+  const updateUserProfile = async () => {
+    console.log("updateUserProfile");
+    const { data: authData } = await supabase.auth.getUser();
+    const user = authData?.user;
+
+    if (currentStreak.value > highestStreak.value) {
+      highestStreak.value = currentStreak.value;
+    }
+
+    if (user) {
+      console.log("Updating user profile", {
+        currentElo: currentElo.value,
+        currentStreak: currentStreak.value,
+        highestStreak: highestStreak.value,
+      });
+      await supabase.from("profiles").update({
+        elo: currentElo.value,
+        current_streak: currentStreak.value,
+        highest_streak: highestStreak.value,
+        daily_challenge_streak: dailyChallenge.value,
+      }).eq("user_id", user.id);
+
+      const correctAttempts = await getCorrectAttempts();
+      dailyChallenge.value = correctAttempts;
+
+      if (
+        dailyChallenge.value > DAILY_CHALLENGE_GOAL &&
+        dailyChallengeLastDayCompleted.value !=
+          dayjs().toISOString().split("T")[0]
+      ) {
+        dailyChallengeStreak.value++;
+        dailyChallengeLastDayCompleted.value =
+          dayjs().toISOString().split("T")[0];
+      }
+    }
+  };
   // Save state changes to localStorage
   watch(
     [currentElo, currentStreak, highestStreak],
     async ([elo, streak, highest]) => {
-      // Update user profile in Supabase
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData?.user;
-
-      if (streak > highestStreak.value) {
-        highestStreak.value = streak;
-      }
-
-      if (user) {
-        await supabase.from("profiles").update({
-          elo: elo,
-          current_streak: streak,
-          highest_streak: highest,
-          daily_challenge_streak: dailyChallenge.value,
-        }).eq("user_id", user.id);
-
-        const { data: correctAttempts } = await supabase.from("puzzle_attempts")
-          .select("*")
-          .eq("outcome", "correct")
-          .gte("created_at", dayjs().startOf("day").toISOString());
-
-        dailyChallenge.value = correctAttempts?.length || 0;
-
-        if (
-          dailyChallenge.value > DAILY_CHALLENGE_GOAL &&
-          dailyChallengeLastDayCompleted.value !=
-            dayjs().toISOString().split("T")[0]
-        ) {
-          dailyChallengeStreak.value++;
-          dailyChallengeLastDayCompleted.value =
-            dayjs().toISOString().split("T")[0];
-        }
-      }
+      //await updateUserProfile();
     },
     { immediate: true },
   );
@@ -263,6 +275,8 @@ export const useUserStore = defineStore("user", () => {
         console.warn("Cannot log puzzle attempt: No authenticated user");
         return;
       }
+
+      updateUserProfile();
 
       const { error } = await supabase.from("puzzle_attempts").insert({
         puzzle_id: puzzleId,

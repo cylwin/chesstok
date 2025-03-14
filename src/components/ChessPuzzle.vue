@@ -170,7 +170,7 @@ function showHint() {
   // Clear previous hints
   clearHints()
 
-  boardAPI.value.drawMove(sourceSquare as any, sourceSquare as any, 'green')
+  boardAPI.value.drawMove(sourceSquare as any, sourceSquare as any, 'red')
   console.log('showHint done')
 }
 
@@ -180,7 +180,7 @@ function showSolution() {
   const targetSquare = props.winningMove.split(' ')[1].substring(2, 4)
 
   clearHints()
-  boardAPI.value.drawMove(sourceSquare as any, targetSquare as any, 'green')
+  boardAPI.value.drawMove(sourceSquare as any, targetSquare as any, 'red')
 }
 
 // Function to clear hints
