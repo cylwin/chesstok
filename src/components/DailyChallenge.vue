@@ -20,11 +20,10 @@ const remainingTime = computed(() => {
 
 // Daily challenge data
 const dailyChallenge = computed(() => {
-  const DAILY_GOAL = 30
   // This would ideally come from the store
   return {
-    completed: Math.min(userStore.dailyChallenge || 0, DAILY_GOAL),
-    total: DAILY_GOAL,
+    completed: Math.min(userStore.dailyChallenge || 0, userStore.DAILY_CHALLENGE_GOAL),
+    total: userStore.DAILY_CHALLENGE_GOAL,
   }
 })
 </script>
@@ -32,10 +31,37 @@ const dailyChallenge = computed(() => {
 <template>
   <h2 class="text-xl font-bold text-slate-700">Daily Challenge</h2>
 
-  <div class="daily-challenge mt-2 p-5 rounded-xl border border-amber-200 bg-white shadow-sm">
+  <div
+    class="relative mt-2 p-5 rounded-xl border bg-white shadow-sm transition-colors duration-300 ease-in-out"
+    :class="{
+      'border-amber-200 bg-gradient-to-b from-white to-amber-50/80':
+        dailyChallenge.completed < dailyChallenge.total,
+      'border-green-200 bg-gradient-to-b from-white to-green-50/80':
+        dailyChallenge.completed >= dailyChallenge.total,
+    }"
+  >
     <div class="flex items-center justify-between mb-2">
-      <h2 class="text-xl font-bold text-slate-700">Solve 30 puzzles</h2>
-      <div class="time-remaining flex items-center text-amber-500 font-bold">
+      <h2 class="text-xl font-bold text-slate-700">
+        Solve {{ userStore.DAILY_CHALLENGE_GOAL }} puzzles
+      </h2>
+      <div
+        v-if="dailyChallenge.completed >= dailyChallenge.total"
+        class="flex items-center text-green-500 font-bold"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </div>
+      <div v-else class="time-remaining flex items-center text-amber-500 font-bold">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="h-5 w-5 mr-1.5"
@@ -69,6 +95,5 @@ const dailyChallenge = computed(() => {
 .daily-challenge {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 250, 240, 0.8) 100%);
 }
 </style>

@@ -1,27 +1,23 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { supabase } from '@/services/supabase'
 
+const router = useRouter()
+
 onMounted(async () => {
   const userStore = useUserStore()
-
-  // Check if user is already authenticated
-  const { data } = await supabase.auth.getSession()
-
-  // Only sign in anonymously if no session exists
-  if (!data.session) {
-    console.log('No existing session found, creating anonymous user')
-    await userStore.signInAnonymously()
-  } else {
-    console.log('Existing session found, using current user')
-  }
+  await userStore.init()
 })
 const route = useRoute()
 const isHomeView = computed(() => {
   return route.name === 'home'
 })
+
+const goToHome = () => {
+  router.push('/')
+}
 </script>
 
 <template>
@@ -35,10 +31,11 @@ const isHomeView = computed(() => {
         <div class="flex items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="h-7 w-7 mr-2"
+            class="h-7 w-7 mr-2 cursor-pointer"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            @click="goToHome"
           >
             <path
               stroke-linecap="round"
