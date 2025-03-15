@@ -18,6 +18,10 @@ const isHomeView = computed(() => {
 const goToHome = () => {
   router.push('/')
 }
+
+const goToPremium = () => {
+  router.push('/premium')
+}
 </script>
 
 <template>
@@ -46,6 +50,15 @@ const goToHome = () => {
           </svg>
           <span class="font-extrabold text-xl tracking-wide">ChessTok</span>
         </div>
+
+        <!-- Premium Button -->
+        <button
+          @click="goToPremium"
+          class="bg-yellow-400 text-gray-800 font-bold text-sm py-1.5 px-3 rounded-full flex items-center transition-all hover:bg-yellow-500"
+        >
+          <span class="mr-1">⭐</span>
+          <span>Premium</span>
+        </button>
       </div>
 
       <main class="flex-1">

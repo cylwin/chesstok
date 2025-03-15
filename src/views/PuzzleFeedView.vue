@@ -6,6 +6,7 @@ import StreakFlame from '../components/StreakFlame.vue'
 import ProgressBar from '../components/ProgressBar.vue'
 import { supabase } from '../services/supabase'
 import { useUserStore, useTimerStore } from '@/stores'
+import { useRouter } from 'vue-router'
 
 // Example puzzle with white to play and win
 const fen = ref('')
@@ -23,6 +24,7 @@ const feedbackType = ref<'success' | 'error' | 'info'>('info')
 
 const userStore = useUserStore()
 const timerStore = useTimerStore()
+const router = useRouter()
 
 // Get the orientation based on whose turn it is in the FEN
 const getOrientationFromFen = computed(() => {

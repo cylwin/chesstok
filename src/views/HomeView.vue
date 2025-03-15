@@ -9,6 +9,10 @@ const router = useRouter()
 const goToPuzzles = () => {
   router.push('/puzzles')
 }
+
+const goToPremium = () => {
+  router.push('/premium')
+}
 </script>
 
 <template>
@@ -29,6 +33,26 @@ const goToPuzzles = () => {
           Train your tactical vision with our puzzle feed. <br /><b>Play, solve, and improve!</b>
         </p>
       </div>
+    </div>
+
+    <!-- Premium Button -->
+    <div class="px-4 mb-6">
+      <button
+        @click="goToPremium"
+        class="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-800 font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center"
+      >
+        <span class="mr-2">⭐</span>
+        <span>Upgrade to Premium</span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 ml-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
     </div>
 
     <!-- Daily Challenge Section -->
