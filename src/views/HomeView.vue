@@ -3,8 +3,10 @@ import { useRouter } from 'vue-router'
 import ActionButton from '@/components/ActionButton.vue'
 import DailyChallenge from '@/components/DailyChallenge.vue'
 import WeeklyProgress from '@/components/WeeklyProgress.vue'
+import { usePaywallStore } from '@/stores/paywall'
 
 const router = useRouter()
+const paywallStore = usePaywallStore()
 
 const goToPuzzles = () => {
   router.push('/puzzles')
@@ -12,6 +14,10 @@ const goToPuzzles = () => {
 
 const goToPremium = () => {
   router.push('/premium')
+}
+
+const goToStats = () => {
+  router.push('/stats')
 }
 </script>
 
@@ -36,7 +42,7 @@ const goToPremium = () => {
     </div>
 
     <!-- Premium Button -->
-    <div class="px-4 mb-6">
+    <div class="px-4 mb-6" v-if="paywallStore.isPaywallActivated">
       <button
         @click="goToPremium"
         class="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-800 font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center"
@@ -67,7 +73,7 @@ const goToPremium = () => {
       <WeeklyProgress />
     </div>
     <div class="flex px-5 mb-4">
-      <ActionButton type="hint" label="STATS" @click="goToPuzzles" />
+      <ActionButton type="hint" label="VIEW STATS" @click="goToStats" />
     </div>
   </div>
 </template>

@@ -19,6 +19,16 @@ const router = createRouter({
       name: "premium",
       component: () => import("../views/Paywall.vue"),
     },
+    {
+      path: "/challenge-completed",
+      name: "challengeCompleted",
+      component: () => import("../views/DailyChallengeCompletedView.vue"),
+    },
+    {
+      path: "/stats",
+      name: "stats",
+      component: () => import("../views/StatsView.vue"),
+    },
   ],
 });
 

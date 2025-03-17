@@ -3,8 +3,10 @@ import { computed, onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { supabase } from '@/services/supabase'
-
+import { usePaywallStore } from '@/stores/paywall'
 const router = useRouter()
+
+const paywallStore = usePaywallStore()
 
 onMounted(async () => {
   const userStore = useUserStore()
@@ -54,6 +56,7 @@ const goToPremium = () => {
         <!-- Premium Button -->
         <button
           @click="goToPremium"
+          v-if="paywallStore.isPaywallActivated"
           class="bg-yellow-400 text-gray-800 font-bold text-sm py-1.5 px-3 rounded-full flex items-center transition-all hover:bg-yellow-500"
         >
           <span class="mr-1">⭐</span>

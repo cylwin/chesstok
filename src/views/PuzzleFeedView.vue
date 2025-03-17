@@ -40,12 +40,11 @@ const streakThresholds = [5, 15, 30]
 
 // Computed property for daily progress
 const dailyProgress = computed(() => {
-  const GOAL = 10
   // This would ideally come from the store
   // For now, we'll use a placeholder value
   return {
-    completed: Math.min(userStore.dailyChallenge, GOAL),
-    total: GOAL,
+    completed: Math.min(userStore.dailyChallenge, userStore.DAILY_CHALLENGE_GOAL),
+    total: userStore.DAILY_CHALLENGE_GOAL,
   }
 })
 

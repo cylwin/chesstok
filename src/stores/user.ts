@@ -1,3 +1,4 @@
+import { useRouter } from "vue-router";
 import { supabase } from "@/services/supabase";
 import dayjs from "dayjs";
 import { defineStore } from "pinia";
@@ -6,10 +7,19 @@ import { computed, onMounted, ref, watch } from "vue";
 const INITIAL_ELO = 300;
 const DAILY_CHALLENGE_GOAL = 10;
 
+export interface UserState {
+  currentStreak: number;
+  longestStreak: number;
+  lastCompletedDate: string | null;
+  totalPuzzlesSolved: number;
+  totalXP: number;
+}
+
 export const useUserStore = defineStore("user", () => {
+  const router = useRouter();
   // State
   const currentElo = ref(INITIAL_ELO);
-  const currentStreak = ref(0);
+  const currentStreak = ref<number>(7);
   const highestStreak = ref(0);
   const puzzlesSolved = ref(0);
   const puzzlesAttempted = ref(0);
@@ -18,19 +28,18 @@ export const useUserStore = defineStore("user", () => {
   const dailyChallengeCurrentDate = ref<string | null>(null);
   const dailyChallengeStreak = ref(0);
   const dailyChallengeLastDayCompleted = ref<string | null>(null);
-  console.log("UserStore initialized");
+
+  const longestStreak = ref<number>(7);
+  const lastCompletedDate = ref<string | null>(null);
+  const totalPuzzlesSolved = ref<number>(32);
+  const totalXP = ref<number>(450);
 
   const init = async () => {
-    console.log("onMounted");
-
     const { data } = await supabase.auth.getSession();
 
     // Only sign in anonymously if no session exists
     if (!data.session) {
-      console.log("No existing session found, creating anonymous user");
       await signInAnonymously();
-    } else {
-      console.log("Existing session found, using current user");
     }
 
     const currentDate = new Date().toISOString().split("T")[0];
@@ -41,7 +50,7 @@ export const useUserStore = defineStore("user", () => {
         "user_id",
         user?.id,
       ).maybeSingle();
-    console.log("userProfile", userProfile);
+
     if (!userProfile) {
       userProfile = await supabase.from("profiles").insert({
         user_id: user?.id,
@@ -56,6 +65,8 @@ export const useUserStore = defineStore("user", () => {
     if (userProfile) {
       // Check if daily challenge streak should be reset
       if (userProfile.daily_challenge_last_day_completed) {
+        dailyChallengeLastDayCompleted.value =
+          userProfile.daily_challenge_last_day_completed || null;
         const lastCompletedDate = dayjs(
           userProfile.daily_challenge_last_day_completed,
         );
@@ -101,7 +112,6 @@ export const useUserStore = defineStore("user", () => {
   };
 
   const updateUserProfile = async () => {
-    console.log("updateUserProfile");
     const { data: authData } = await supabase.auth.getUser();
     const user = authData?.user;
 
@@ -110,12 +120,9 @@ export const useUserStore = defineStore("user", () => {
     }
 
     if (user) {
-      console.log("Updating user profile", {
-        currentElo: currentElo.value,
-        currentStreak: currentStreak.value,
-        highestStreak: highestStreak.value,
-      });
-      await supabase.from("profiles").update({
+      supabase.from(
+        "profiles",
+      ).update({
         elo: currentElo.value,
         current_streak: currentStreak.value,
         highest_streak: highestStreak.value,
@@ -123,16 +130,26 @@ export const useUserStore = defineStore("user", () => {
       }).eq("user_id", user.id);
 
       const correctAttempts = await getCorrectAttempts();
+
       dailyChallenge.value = correctAttempts;
 
       if (
-        dailyChallenge.value > DAILY_CHALLENGE_GOAL &&
-        dailyChallengeLastDayCompleted.value !=
-          dayjs().toISOString().split("T")[0]
+        dailyChallenge.value >= DAILY_CHALLENGE_GOAL &&
+        (dailyChallengeLastDayCompleted.value !=
+          dayjs().toISOString().split("T")[0])
       ) {
         dailyChallengeStreak.value++;
         dailyChallengeLastDayCompleted.value =
           dayjs().toISOString().split("T")[0];
+        router.push("/challenge-completed");
+
+        await supabase.from(
+          "profiles",
+        ).update({
+          daily_challenge_streak: dailyChallengeStreak.value,
+          daily_challenge_last_day_completed:
+            dayjs().toISOString().split("T")[0],
+        }).eq("user_id", user.id);
       }
     }
   };
@@ -265,8 +282,6 @@ export const useUserStore = defineStore("user", () => {
     timeToSolve: number,
   ): Promise<void> {
     try {
-      console.log("logPuzzleAttempt");
-      // Get current user
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -313,7 +328,6 @@ export const useUserStore = defineStore("user", () => {
     usedSolution: boolean = false,
     timeToSolve: number = 0,
   ): number {
-    console.log("updateEloAfterPuzzle");
     const initialElo = currentElo.value;
     const expectedScore = calculateExpectedScore(initialElo, puzzleRating);
     const actualScore = isCorrect ? 1 : 0;
@@ -323,7 +337,6 @@ export const useUserStore = defineStore("user", () => {
     } else {
       puzzlesAttempted.value++;
     }
-    console.log({ usedHint, usedSolution, newElo, initialElo });
     // Update user stats
     currentElo.value = newElo;
 
@@ -356,7 +369,33 @@ export const useUserStore = defineStore("user", () => {
 
   async function signInAnonymously(): Promise<void> {
     const { data, error } = await supabase.auth.signInAnonymously();
-    console.log(data);
+  }
+
+  // Getters
+  const streakXpBonus = computed(() => currentStreak.value * 5);
+  const dailyXpReward = computed(() => 50);
+
+  // Actions
+  function completeDailyChallenge() {
+    const today = new Date().toISOString().split("T")[0];
+
+    // Only count if it's a new day
+    if (lastCompletedDate.value !== today) {
+      currentStreak.value++;
+
+      if (currentStreak.value > longestStreak.value) {
+        longestStreak.value = currentStreak.value;
+      }
+
+      lastCompletedDate.value = today;
+      totalPuzzlesSolved.value++;
+      totalXP.value += dailyXpReward.value + streakXpBonus.value;
+    }
+  }
+
+  function resetStreak() {
+    currentStreak.value = 0;
+    lastCompletedDate.value = null;
   }
 
   return {
@@ -370,8 +409,14 @@ export const useUserStore = defineStore("user", () => {
     dailyChallengeCurrentDate,
     dailyChallengeStreak,
     DAILY_CHALLENGE_GOAL,
+    longestStreak,
+    lastCompletedDate,
+    totalPuzzlesSolved,
+    totalXP,
 
     // Getters
+    streakXpBonus,
+    dailyXpReward,
 
     // Actions
     init,
@@ -379,5 +424,7 @@ export const useUserStore = defineStore("user", () => {
     signInAnonymously,
     logPuzzleAttempt,
     getNewPuzzle,
+    completeDailyChallenge,
+    resetStreak,
   };
 });

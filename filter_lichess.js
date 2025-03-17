@@ -3,7 +3,7 @@ import readline from 'readline'
 
 // Chemins des fichiers
 const inputFile = 'lichess_db_puzzle.csv'
-const outputFile = 'lichess_db_puzzle_filtered.csv'
+const outputFile = 'lichess_db_puzzle_filtered_fork.csv'
 
 async function processFile() {
   try {
@@ -46,6 +46,7 @@ async function processFile() {
       const popularity = parseInt(columns[5], 10)
       const NbPlays = parseInt(columns[6], 10)
       const moves = columns[2] // Le champ "Moves" est la 3ème colonne
+      const themes = columns[7]
 
       // Compter le nombre d'espaces dans le champ "Moves"
       const spacesCount = (moves.match(/ /g) || []).length
@@ -54,7 +55,7 @@ async function processFile() {
       // - rating < 1500
       // - popularité > 98
       // - le champ "Moves" contient exactement un espace
-      if (rating < 400 && popularity > 20 && spacesCount === 1 && NbPlays < 600 && NbPlays > 100) {
+      if (spacesCount === 1 && themes.includes('fork') && !themes.includes('mateIn1')) {
         outputStream.write(line + '\n')
         count++
 

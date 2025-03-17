@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.0.12",
     "@unovis/ts": "^1.5.1",
     "@unovis/vue": "^1.5.1",
+    "canvas-confetti": "^1.9.3",
     "chart.js": "^4.4.8",
     "chess.js": "^1.1.0",
     "dayjs": "^1.11.13",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.0",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.13.9",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/tsconfig": "^0.7.0",

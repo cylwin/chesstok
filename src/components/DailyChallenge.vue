@@ -41,9 +41,7 @@ const dailyChallenge = computed(() => {
     }"
   >
     <div class="flex items-center justify-between mb-2">
-      <h2 class="text-xl font-bold text-slate-700">
-        Solve {{ userStore.DAILY_CHALLENGE_GOAL }} puzzles
-      </h2>
+      <h2 class="text-xl font-bold text-slate-700">Solve {{ dailyChallenge.total }} puzzles</h2>
       <div
         v-if="dailyChallenge.completed >= dailyChallenge.total"
         class="flex items-center text-green-500 font-bold"
@@ -60,6 +58,7 @@ const dailyChallenge = computed(() => {
             clip-rule="evenodd"
           />
         </svg>
+        <span class="ml-1">Completed!</span>
       </div>
       <div v-else class="time-remaining flex items-center text-amber-500 font-bold">
         <svg
