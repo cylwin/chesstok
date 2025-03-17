@@ -70,12 +70,6 @@ async function getUserEloHistory() {
   }))
 }
 
-interface ProgressData {
-  name: string
-  elo: number
-  color: string
-}
-
 // Define day keys for type safety, now based on ISO date string format (YYYY-MM-DD)
 type DayKey = string
 
@@ -110,13 +104,6 @@ const chartData = ref<ChartDataItem>({
 })
 
 const userStore = useUserStore()
-
-// For display in header
-const progressData = ref<ProgressData>({
-  name: 'Your Elo',
-  elo: userStore.currentElo,
-  color: '#4f46e5',
-})
 
 // Initialize chart data with dates
 onMounted(async () => {
@@ -174,11 +161,6 @@ onMounted(async () => {
     console.error('Failed to fetch ELO history:', error)
     // Fallback to empty data in case of error
     chartData.value = { name: 'Your Elo', color: '#4f46e5' }
-    progressData.value = {
-      name: 'Your Elo',
-      elo: 0,
-      color: '#4f46e5',
-    }
   }
 })
 
@@ -257,16 +239,11 @@ const chartjsData = computed(() => {
 
     <!-- User ELO Header -->
     <div class="mb-6">
-      <div :key="progressData.name" class="flex items-center mb-1">
-        <div
-          class="w-3 h-3 rounded-full mr-2"
-          :style="{ backgroundColor: progressData.color }"
-        ></div>
-        <span class="text-base font-medium" :style="{ color: progressData.color }">{{
-          progressData.name
-        }}</span>
-        <span class="ml-auto text-base font-medium" :style="{ color: progressData.color }"
-          >{{ progressData.elo }} Elo</span
+      <div class="flex items-center mb-1">
+        <div class="w-3 h-3 rounded-full mr-2" :style="{ backgroundColor: '#4f46e5' }"></div>
+        <span class="text-base font-medium" :style="{ color: '#4f46e5' }"> Your Elo </span>
+        <span class="ml-auto text-base font-medium" :style="{ color: '#4f46e5' }"
+          >{{ userStore.currentElo || '-' }} Elo</span
         >
       </div>
     </div>

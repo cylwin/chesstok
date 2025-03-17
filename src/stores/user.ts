@@ -92,6 +92,7 @@ export const useUserStore = defineStore("user", () => {
       currentElo.value = userProfile.elo || INITIAL_ELO;
       currentStreak.value = userProfile.current_streak || 0;
       highestStreak.value = userProfile.highest_streak || 0;
+      dailyChallengeStreak.value = userProfile.daily_challenge_streak || 0;
     }
     if (dailyChallengeCurrentDate.value === null) {
       dailyChallengeCurrentDate.value = currentDate;

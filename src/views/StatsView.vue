@@ -15,6 +15,7 @@ import dayjs from 'dayjs'
 import { supabase } from '@/services/supabase'
 import { useUserStore } from '@/stores/user'
 import ProgressBar from '@/components/ProgressBar.vue'
+import DailyStreakProgress from '@/components/DailyStreakProgress.vue'
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
@@ -27,6 +28,7 @@ const stats = ref({
   losses: 0,
   totalPuzzles: 0,
   bestGamesStreak: 0,
+  bestElo: 0,
 })
 
 // For the ELO chart
@@ -115,7 +117,7 @@ const chartOptions = {
     },
   },
   animation: {
-    duration: 0, // Disable animations by setting duration to 0
+    duration: 500,
   },
 }
 
@@ -131,14 +133,6 @@ const chartjsData = computed(() => {
       borderWidth: 2,
       pointBackgroundColor: user.color,
     })),
-  }
-})
-
-// Daily challenge data
-const dailyChallenge = computed(() => {
-  return {
-    completed: Math.min(userStore.dailyChallenge || 0, userStore.DAILY_CHALLENGE_GOAL),
-    total: userStore.DAILY_CHALLENGE_GOAL,
   }
 })
 
@@ -198,7 +192,9 @@ async function getUserEloHistory() {
 async function fetchStats() {
   try {
     // Get puzzle attempts to calculate wins and losses
-    const { data: puzzleAttempts, error } = await supabase.from('puzzle_attempts').select('outcome')
+    const { data: puzzleAttempts, error } = await supabase
+      .from('puzzle_attempts')
+      .select('outcome, new_elo')
 
     if (error) {
       console.error('Error fetching puzzle attempts:', error)
@@ -208,12 +204,13 @@ async function fetchStats() {
     if (puzzleAttempts) {
       const wins = puzzleAttempts.filter((attempt) => attempt.outcome === 'correct').length
       const losses = puzzleAttempts.filter((attempt) => attempt.outcome === 'incorrect').length
-
+      const bestElo = Math.max(...puzzleAttempts.map((attempt) => attempt.new_elo))
       stats.value = {
         wins,
         losses,
         totalPuzzles: wins + losses,
-        bestGamesStreak: userStore.highestStreak || 0, // TODO: add highest games streak
+        bestGamesStreak: userStore.highestStreak || 0,
+        bestElo,
       }
     }
 
@@ -306,49 +303,20 @@ onMounted(async () => {
         </div>
 
         <div class="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
+          <h3 class="text-sm text-gray-500 mb-1">Best Elo achieved</h3>
+          <div class="text-2xl font-bold text-indigo-600">{{ stats.bestElo }}</div>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
           <h3 class="text-sm text-gray-500 mb-1">Best Games Streak</h3>
           <div class="text-2xl font-bold text-indigo-600">{{ stats.bestGamesStreak }}</div>
         </div>
       </div>
 
-      <!-- Daily Challenge Progress (without animation) -->
-      <div class="mb-6">
-        <h2 class="text-xl font-bold text-slate-700 mb-2">Daily Challenge Progress</h2>
-        <div class="p-5 rounded-xl border border-amber-200 bg-white shadow-sm">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-lg font-bold text-slate-700">
-              {{ dailyChallenge.completed }}/{{ dailyChallenge.total }} Puzzles
-            </h3>
-            <div
-              v-if="dailyChallenge.completed >= dailyChallenge.total"
-              class="text-green-500 font-bold flex items-center"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 mr-1"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Completed!
-            </div>
-          </div>
-          <div class="flex items-center">
-            <div class="flex-1">
-              <ProgressBar
-                :completed="dailyChallenge.completed"
-                :total="dailyChallenge.total"
-                label=""
-                className=""
-              />
-            </div>
-          </div>
-        </div>
+      <!-- Daily Challenge Streak -->
+      <div class="mb-6" v-if="userStore.dailyChallengeStreak > 0">
+        <h2 class="text-xl font-bold text-slate-700 mb-2">Daily Challenge Streak</h2>
+        <DailyStreakProgress :animate="false" />
       </div>
 
       <!-- ELO History Chart -->
@@ -393,9 +361,7 @@ onMounted(async () => {
 }
 .stats-view {
   padding: 1rem;
-  background-color: #f9fafb;
 }
-
 .weekly-progress {
   position: relative;
   overflow: hidden;
