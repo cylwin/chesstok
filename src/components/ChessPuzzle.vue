@@ -125,6 +125,7 @@ function playSound(sound: keyof typeof SOUNDS) {
 
 // Set up the board with the provided FEN and orientation
 function updateBoardFromProps() {
+  console.log('updateBoardFromProps')
   isSolved.value = false
   isFailed.value = false
   newElo.value = null
@@ -333,6 +334,7 @@ function resetTimer() {
           :fen="fen"
           @board-created="onBoardCreated"
         />
+        {{ props.puzzleId }}
       </div>
     </div>
   </div>

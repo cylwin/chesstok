@@ -233,13 +233,14 @@ export const useUserStore = defineStore("user", () => {
             .from("puzzles")
             .select("*")
             .gte("Rating", minElo)
-            .lte("Rating", maxElo)
+            .lte("Rating", maxElo + 200)
             .not(
               "PuzzleId",
               "in",
               `(${attemptedPuzzles?.map((p) => `"${p.puzzle_id}"`).join(",")})`,
             )
             .like("Themes", "%hangingPiece%")
+            .not("Themes", "like", "%mateIn1%")
             .limit(1)
             .single(),
 

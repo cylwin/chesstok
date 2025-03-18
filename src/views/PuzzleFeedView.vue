@@ -4,32 +4,21 @@ import ChessPuzzle from '../components/ChessPuzzle.vue'
 import UserEloBadge from '../components/UserEloBadge.vue'
 import StreakFlame from '../components/StreakFlame.vue'
 import ProgressBar from '../components/ProgressBar.vue'
-import { supabase } from '../services/supabase'
-import { useUserStore, useTimerStore } from '@/stores'
+import { useUserStore, useTimerStore, usePuzzleStore } from '@/stores'
 import { useRouter } from 'vue-router'
-
-// Example puzzle with white to play and win
-const fen = ref('')
-const winningMove = ref('')
-const puzzleRating = ref(0)
-const currentPuzzleId = ref('')
 
 // Reference to the puzzle component
 const puzzleRef = ref<InstanceType<typeof ChessPuzzle> | null>(null)
 
-// Track user feedback messages
-const feedbackMessage = ref('')
-const showFeedback = ref(false)
-const feedbackType = ref<'success' | 'error' | 'info'>('info')
-
 const userStore = useUserStore()
 const timerStore = useTimerStore()
+const puzzleStore = usePuzzleStore()
 const router = useRouter()
 
 // Get the orientation based on whose turn it is in the FEN
 const getOrientationFromFen = computed(() => {
-  if (!fen.value) return 'white'
-  const fenParts = fen.value.split(' ')
+  if (!puzzleStore.fen) return 'white'
+  const fenParts = puzzleStore.fen.split(' ')
   // The active color is the second field in the FEN string
   const activeColor = fenParts[1]
   return activeColor === 'w' ? 'white' : 'black'
@@ -53,83 +42,18 @@ const progressPercentage = computed(() => {
   return (dailyProgress.value.completed / dailyProgress.value.total) * 100
 })
 
-function handlePuzzleSolved(rating: number, newElo: number, eloChange: number) {
-  // Record puzzle completion time
-  const solveTime = timerStore.recordPuzzleCompletion()
-
-  // Handle when puzzle is correctly solved
-  feedbackMessage.value = `Correct!`
-  feedbackType.value = 'success'
-  showFeedback.value = true
-
-  // Hide feedback after 2 seconds
-  setTimeout(() => {
-    showFeedback.value = false
-  }, 2000)
-}
-
-function handlePuzzleFailed(rating: number, newElo: number, eloChange: number) {
-  // Record puzzle attempt time
-  const solveTime = timerStore.recordPuzzleCompletion()
-
-  // Handle when puzzle is incorrectly solved
-  feedbackMessage.value = `Incorrect!`
-  feedbackType.value = 'error'
-  showFeedback.value = true
-
-  // Hide feedback after 2 seconds
-  setTimeout(() => {
-    showFeedback.value = false
-  }, 2000)
-}
-
-// Store the next puzzle to accelerate loading
-const nextPuzzle = ref(null)
-
-async function getNewPuzzle() {
-  // Start a new puzzle timer
-  timerStore.startNewPuzzle()
-
-  // Use the preloaded puzzle if available
-  let data: any = nextPuzzle.value
-  nextPuzzle.value = null
-
-  // If no preloaded puzzle, fetch one
-  if (!data) {
-    console.log('No preloaded puzzle, fetching new one')
-    data = await userStore.getNewPuzzle()
-  }
-
-  if (!data) {
-    console.error('Failed to get new puzzle')
-    feedbackMessage.value = 'Could not load puzzle. Please try again.'
-    feedbackType.value = 'info'
-    showFeedback.value = true
-
-    // Hide feedback after 2 seconds
-    setTimeout(() => {
-      showFeedback.value = false
-    }, 2000)
-    return null
-  }
-
-  // Set current puzzle data
-  fen.value = data.FEN
-  winningMove.value = data.Moves
-  puzzleRating.value = data.Rating || 600
-  currentPuzzleId.value = data.PuzzleId || ''
-
-  // Preload the next puzzle
-  userStore.getNewPuzzle().then((puzzleData) => {
-    nextPuzzle.value = puzzleData
-  })
-
-  return data
-}
-
 onMounted(async () => {
   timerStore.startNewPuzzle()
-  getNewPuzzle()
+  puzzleStore.getNewPuzzle()
+})
+
+const verb = computed(() => {
+  const MAP_VERB = {
+    mateIn1: 'mate',
+    hangingPiece: 'take',
+    other: 'move',
+  }
+  return MAP_VERB[puzzleStore.currentPuzzleTheme as keyof typeof MAP_VERB] || 'move'
 })
 </script>
 
@@ -144,7 +68,7 @@ onMounted(async () => {
     <div class="flex items-center">
       <div>
         <div class="font-black text-slate-800 text-right">PUZZLE ELO</div>
-        <div class="text-accent font-black text-xl text-right">{{ puzzleRating }}</div>
+        <div class="text-accent font-black text-xl text-right">{{ puzzleStore.puzzleRating }}</div>
       </div>
       <div
         class="w-12 h-12 puzzle-badge rounded-xl flex items-center justify-center text-white font-bold ml-3 -rotate-3"
@@ -167,9 +91,9 @@ onMounted(async () => {
     </div>
   </div>
   <div class="mt-1 py-1 px-5 flex justify-between">
-    <div v-if="!showFeedback">
+    <div v-if="!puzzleStore.showFeedback">
       <div
-        v-if="fen"
+        v-if="puzzleStore.fen"
         class="instruction-box text-center font-bold text-md text-slate-800 bg-yellow-100 py-1 px-2 rounded-lg shadow-inner border border-yellow-200 flex items-center"
       >
         <div
@@ -180,23 +104,23 @@ onMounted(async () => {
           class="w-4 h-4 bg-black rounded-md border border-slate-300 mr-2"
           v-else-if="getOrientationFromFen === 'white'"
         ></div>
-        {{ getOrientationFromFen === 'white' ? 'Black' : 'White' }} to move
+        {{ getOrientationFromFen === 'white' ? 'Black' : 'White' }} to {{ verb }}
       </div>
     </div>
     <div
-      v-if="showFeedback"
+      v-if="puzzleStore.showFeedback"
       class="text-center font-bold text-md text-white py-1 px-2 rounded-lg shadow-inner border flex items-center justify-center gap-2"
       :class="{
         'bg-gradient-to-r from-green-500 to-green-400 border-green-700 shadow-green-500/30':
-          feedbackType === 'success',
+          puzzleStore.feedbackType === 'success',
         'bg-gradient-to-r from-red-500 to-red-400 border-red-700 shadow-red-500/30':
-          feedbackType === 'error',
+          puzzleStore.feedbackType === 'error',
         'bg-gradient-to-r from-blue-500 to-blue-400 border-blue-700 shadow-blue-500/30':
-          feedbackType === 'info',
+          puzzleStore.feedbackType === 'info',
       }"
     >
       <svg
-        v-if="feedbackType === 'success'"
+        v-if="puzzleStore.feedbackType === 'success'"
         xmlns="http://www.w3.org/2000/svg"
         class="h-5 w-5"
         viewBox="0 0 20 20"
@@ -209,7 +133,7 @@ onMounted(async () => {
         />
       </svg>
       <svg
-        v-if="feedbackType === 'error'"
+        v-if="puzzleStore.feedbackType === 'error'"
         xmlns="http://www.w3.org/2000/svg"
         class="h-5 w-5"
         viewBox="0 0 20 20"
@@ -221,7 +145,7 @@ onMounted(async () => {
           clip-rule="evenodd"
         />
       </svg>
-      {{ feedbackMessage }}
+      {{ puzzleStore.feedbackMessage }}
     </div>
     <div
       class="timer rounded-lg flex justify-center items-center bg-slate-100 py-1 px-2 shadow-sm shadow-slate-300/30"
@@ -250,23 +174,23 @@ onMounted(async () => {
   <div class="relative">
     <ChessPuzzle
       ref="puzzleRef"
-      :fen="fen"
-      :winning-move="winningMove"
-      :puzzle-rating="puzzleRating"
-      :puzzle-id="currentPuzzleId"
+      :fen="puzzleStore.fen"
+      :winning-move="puzzleStore.winningMove"
+      :puzzle-rating="puzzleStore.puzzleRating"
+      :puzzle-id="puzzleStore.currentPuzzleId"
       :borderColor="
-        showFeedback
-          ? feedbackType === 'success'
+        puzzleStore.showFeedback
+          ? puzzleStore.feedbackType === 'success'
             ? 'green'
-            : feedbackType === 'error'
+            : puzzleStore.feedbackType === 'error'
               ? 'red'
               : 'black'
           : 'black'
       "
-      @next="getNewPuzzle"
-      @solved="handlePuzzleSolved"
-      @failed="handlePuzzleFailed"
-      v-if="fen"
+      @next="puzzleStore.getNewPuzzle"
+      @solved="puzzleStore.handlePuzzleSolved"
+      @failed="puzzleStore.handlePuzzleFailed"
+      v-if="puzzleStore.fen"
     />
   </div>
 
