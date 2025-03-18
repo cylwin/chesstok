@@ -27,7 +27,6 @@ const stats = ref({
   wins: 0,
   losses: 0,
   totalPuzzles: 0,
-  bestGamesStreak: 0,
   bestElo: 0,
 })
 
@@ -209,7 +208,6 @@ async function fetchStats() {
         wins,
         losses,
         totalPuzzles: wins + losses,
-        bestGamesStreak: userStore.highestStreak || 0,
         bestElo,
       }
     }
@@ -309,7 +307,7 @@ onMounted(async () => {
 
         <div class="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
           <h3 class="text-sm text-gray-500 mb-1">Best Games Streak</h3>
-          <div class="text-2xl font-bold text-indigo-600">{{ stats.bestGamesStreak }}</div>
+          <div class="text-2xl font-bold text-indigo-600">{{ userStore.highestStreak }}</div>
         </div>
       </div>
 

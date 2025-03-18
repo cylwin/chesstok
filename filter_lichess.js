@@ -1,5 +1,12 @@
 import fs from 'fs'
 import readline from 'readline'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = 'https://ulwqfzndiaomknuczazo.supabase.co'
+const supabaseKey =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVsd3Fmem5kaWFvbWtudWN6YXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE2MzE1NzQsImV4cCI6MjA1NzIwNzU3NH0.qPchQbv8RVdy_SF3ZBIcjXY8Si3m9XkpouirKAIla7Y'
+
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Chemins des fichiers
 const inputFile = 'lichess_db_puzzle.csv'
@@ -10,6 +17,39 @@ async function processFile() {
     const fileStream = fs.createReadStream(inputFile)
     const outputStream = fs.createWriteStream(outputFile)
 
+    // Fetch all puzzles by paginating through results
+    let allPuzzles = []
+    let page = 0
+    const pageSize = 1000
+    let hasMore = true
+
+    while (hasMore) {
+      const { data, error, count } = await supabase
+        .from('puzzles')
+        .select('PuzzleId', { count: 'exact' })
+        .like('Themes', '%hangingPiece%')
+        .range(page * pageSize, (page + 1) * pageSize - 1)
+
+      if (error) {
+        console.error('Error fetching puzzles:', error)
+        break
+      }
+
+      if (data && data.length > 0) {
+        allPuzzles = [...allPuzzles, ...data]
+        page++
+        console.log(page, 'page', allPuzzles.length, 'puzzles')
+        // Check if we've reached the end
+        hasMore = data.length === pageSize
+      } else {
+        hasMore = false
+      }
+    }
+
+    const puzzles = allPuzzles
+
+    const puzzlesIds = puzzles.map((puzzle) => puzzle.PuzzleId)
+    console.log(puzzlesIds.length, 'puzzles in db')
     const rl = readline.createInterface({
       input: fileStream,
       crlfDelay: Infinity,
@@ -55,7 +95,19 @@ async function processFile() {
       // - rating < 1500
       // - popularité > 98
       // - le champ "Moves" contient exactement un espace
-      if (spacesCount === 1 && themes.includes('fork') && !themes.includes('mateIn1')) {
+      const puzzleId = columns[0]
+      if (
+        spacesCount === 1 &&
+        themes.includes('hangingPiece') &&
+        !themes.includes('mateIn1') &&
+        !puzzlesIds.includes(puzzleId)
+      ) {
+        // double check with a db query
+        // const { data: puzzle, error } = await supabase
+        //   .from('puzzles')
+        //   .select('PuzzleId')
+        //   .eq('PuzzleId', puzzleId)
+        // if (!puzzle) {
         outputStream.write(line + '\n')
         count++
 
@@ -71,6 +123,9 @@ async function processFile() {
         // Attribuer au bucket approprié pour rating
         const ratingBucketIndex = Math.floor(rating / 100) * 100
         ratingBuckets[ratingBucketIndex] = (ratingBuckets[ratingBucketIndex] || 0) + 1
+        // } else {
+        //   console.log(puzzleId, 'already exists')
+        // }
       }
     }
 

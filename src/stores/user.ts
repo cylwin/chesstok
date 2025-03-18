@@ -120,8 +120,15 @@ export const useUserStore = defineStore("user", () => {
       highestStreak.value = currentStreak.value;
     }
 
+    console.log(
+      "Updating user profile:",
+      currentElo.value,
+      currentStreak.value,
+      highestStreak.value,
+      dailyChallenge.value,
+    );
     if (user) {
-      supabase.from(
+      await supabase.from(
         "profiles",
       ).update({
         elo: currentElo.value,
@@ -129,6 +136,13 @@ export const useUserStore = defineStore("user", () => {
         highest_streak: highestStreak.value,
         daily_challenge_streak: dailyChallenge.value,
       }).eq("user_id", user.id);
+      console.log(
+        "Updated user profile:",
+        currentElo.value,
+        currentStreak.value,
+        highestStreak.value,
+        dailyChallenge.value,
+      );
 
       const correctAttempts = await getCorrectAttempts();
 
@@ -214,22 +228,47 @@ export const useUserStore = defineStore("user", () => {
           .select("puzzle_id")
           .eq("user_id", user?.id);
         // Single query with a NOT EXISTS approach
-        const { data, error } = await supabase
-          .from("puzzles")
-          .select("*")
-          .gte("Rating", minElo)
-          .lte("Rating", maxElo)
-          .not(
-            "PuzzleId",
-            "in",
-            `(${attemptedPuzzles?.map((p) => `"${p.puzzle_id}"`).join(",")})`,
-          )
-          .limit(1)
-          .single();
+        const [hangingPieceResult, mateIn1Result] = await Promise.all([
+          supabase
+            .from("puzzles")
+            .select("*")
+            .gte("Rating", minElo)
+            .lte("Rating", maxElo)
+            .not(
+              "PuzzleId",
+              "in",
+              `(${attemptedPuzzles?.map((p) => `"${p.puzzle_id}"`).join(",")})`,
+            )
+            .like("Themes", "%hangingPiece%")
+            .limit(1)
+            .single(),
 
-        if (error) {
-          console.error("Error fetching puzzle:", error);
+          supabase
+            .from("puzzles")
+            .select("*")
+            .gte("Rating", minElo)
+            .lte("Rating", maxElo)
+            .not(
+              "PuzzleId",
+              "in",
+              `(${attemptedPuzzles?.map((p) => `"${p.puzzle_id}"`).join(",")})`,
+            )
+            .like("Themes", "%mateIn1%")
+            .limit(1)
+            .single(),
+        ]);
 
+        const { data: hangingPiecePuzzle, error: hangingPieceError } =
+          hangingPieceResult;
+        const { data: mateIn1Puzzle, error: mateIn1Error } = mateIn1Result;
+
+        if (hangingPieceError && mateIn1Error) {
+          console.error(
+            "Error fetching puzzle:",
+            hangingPieceError,
+            mateIn1Error,
+          );
+          const error = hangingPieceError || mateIn1Error;
           // If no puzzles found within the ELO range that haven't been attempted,
           // try again with a wider range
           if (error.code === "PGRST116") {
@@ -250,8 +289,10 @@ export const useUserStore = defineStore("user", () => {
 
           return null;
         }
-
-        return data;
+        const random = Math.random();
+        return random < 0.7
+          ? hangingPiecePuzzle || mateIn1Puzzle
+          : mateIn1Puzzle || hangingPiecePuzzle;
       } else {
         console.warn("No user found");
         return null;
@@ -282,6 +323,16 @@ export const useUserStore = defineStore("user", () => {
     usedSolution: boolean,
     timeToSolve: number,
   ): Promise<void> {
+    console.log(
+      "Logging puzzle attempt:",
+      puzzleId,
+      initialElo,
+      newElo,
+      outcome,
+      usedHint,
+      usedSolution,
+      timeToSolve,
+    );
     try {
       const {
         data: { user },
@@ -291,7 +342,16 @@ export const useUserStore = defineStore("user", () => {
         console.warn("Cannot log puzzle attempt: No authenticated user");
         return;
       }
-
+      console.log(
+        "Logging puzzle attempt:",
+        puzzleId,
+        initialElo,
+        newElo,
+        outcome,
+        usedHint,
+        usedSolution,
+        timeToSolve,
+      );
       updateUserProfile();
 
       const { error } = await supabase.from("puzzle_attempts").insert({

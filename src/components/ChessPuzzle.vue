@@ -224,7 +224,7 @@ function checkWinningMove(from: any, to: any, capture: any) {
       usedHint.value = false
       usedSolution.value = false
       emit('next')
-    }, 700)
+    }, 1200)
   } else {
     // Wrong move!
     isFailed.value = true

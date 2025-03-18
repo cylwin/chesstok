@@ -83,12 +83,22 @@ function handlePuzzleFailed(rating: number, newElo: number, eloChange: number) {
   }, 2000)
 }
 
+// Store the next puzzle to accelerate loading
+const nextPuzzle = ref(null)
+
 async function getNewPuzzle() {
   // Start a new puzzle timer
   timerStore.startNewPuzzle()
 
-  const data = await userStore.getNewPuzzle()
-  console.log(data)
+  // Use the preloaded puzzle if available
+  let data: any = nextPuzzle.value
+  nextPuzzle.value = null
+
+  // If no preloaded puzzle, fetch one
+  if (!data) {
+    console.log('No preloaded puzzle, fetching new one')
+    data = await userStore.getNewPuzzle()
+  }
 
   if (!data) {
     console.error('Failed to get new puzzle')
@@ -103,13 +113,16 @@ async function getNewPuzzle() {
     return null
   }
 
-  console.log(data)
-  //setTimeout(() => {
+  // Set current puzzle data
   fen.value = data.FEN
   winningMove.value = data.Moves
   puzzleRating.value = data.Rating || 600
   currentPuzzleId.value = data.PuzzleId || ''
-  //}, 1000)
+
+  // Preload the next puzzle
+  userStore.getNewPuzzle().then((puzzleData) => {
+    nextPuzzle.value = puzzleData
+  })
 
   return data
 }
