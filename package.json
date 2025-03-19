@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.0.12",
     "@unovis/ts": "^1.5.1",
     "@unovis/vue": "^1.5.1",
+    "@vueuse/core": "^13.0.0",
     "canvas-confetti": "^1.9.3",
     "chart.js": "^4.4.8",
     "chess.js": "^1.1.0",

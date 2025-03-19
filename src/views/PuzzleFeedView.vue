@@ -6,6 +6,7 @@ import StreakFlame from '../components/StreakFlame.vue'
 import ProgressBar from '../components/ProgressBar.vue'
 import { useUserStore, useTimerStore, usePuzzleStore } from '@/stores'
 import { useRouter } from 'vue-router'
+import confetti from 'canvas-confetti'
 
 // Reference to the puzzle component
 const puzzleRef = ref<InstanceType<typeof ChessPuzzle> | null>(null)
@@ -44,7 +45,9 @@ const progressPercentage = computed(() => {
 
 onMounted(async () => {
   timerStore.startNewPuzzle()
-  puzzleStore.getNewPuzzle()
+  if (!puzzleStore.currentPuzzleId) {
+    puzzleStore.getNewPuzzle()
+  }
 })
 
 const verb = computed(() => {
@@ -55,6 +58,47 @@ const verb = computed(() => {
   }
   return MAP_VERB[puzzleStore.currentPuzzleTheme as keyof typeof MAP_VERB] || 'move'
 })
+function triggerConfetti() {
+  const duration = 1500
+  const end = Date.now() + duration
+
+  // Run the confetti animation
+  const interval = setInterval(() => {
+    if (Date.now() > end) {
+      return clearInterval(interval)
+    }
+  }, 50)
+}
+
+function handlePuzzleSolved(rating: number, newElo: number, eloChange: number) {
+  const colorsSchemes = [
+    ['#6366f1', '#10b981', '#f97316'],
+    ['#FFD700', '#FF3E9D', '#00FFDD'],
+    ['#39FF14', '#FE01FF', '#FFFF00'],
+    ['#FF2E63', '#5465FF', '#1FFF20'],
+  ]
+  if (Math.random() < 0.2) {
+    confetti({
+      particleCount: 70,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0 },
+      colors: colorsSchemes[Math.floor(Math.random() * colorsSchemes.length)],
+    })
+
+    confetti({
+      particleCount: 70,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1 },
+      colors: colorsSchemes[Math.floor(Math.random() * colorsSchemes.length)],
+    })
+  }
+
+  puzzleStore.setFeedback('Correct!', 'success')
+
+  puzzleStore.handlePuzzleSolved(rating, newElo, eloChange)
+}
 </script>
 
 <template>
@@ -174,6 +218,7 @@ const verb = computed(() => {
   <div class="relative">
     <ChessPuzzle
       ref="puzzleRef"
+      :is-onboarding="false"
       :fen="puzzleStore.fen"
       :winning-move="puzzleStore.winningMove"
       :puzzle-rating="puzzleStore.puzzleRating"
@@ -188,7 +233,7 @@ const verb = computed(() => {
           : 'black'
       "
       @next="puzzleStore.getNewPuzzle"
-      @solved="puzzleStore.handlePuzzleSolved"
+      @solved="handlePuzzleSolved"
       @failed="puzzleStore.handlePuzzleFailed"
       v-if="puzzleStore.fen"
     />
@@ -210,93 +255,6 @@ const verb = computed(() => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
-
-.chess-piece {
-  position: absolute;
-  opacity: 0.07;
-  z-index: 0;
-  transform: rotate(10deg);
-}
-
-.chess-piece-1 {
-  top: 10%;
-  left: -10%;
-  width: 150px;
-  height: 150px;
-}
-
-.chess-piece-2 {
-  bottom: 10%;
-  right: -10%;
-  width: 150px;
-  height: 150px;
-  transform: rotate(-15deg);
-}
-
-.chess-piece-3 {
-  top: 40%;
-  right: -5%;
-  width: 100px;
-  height: 100px;
-  transform: rotate(25deg);
-}
-
-.chess-piece-4 {
-  bottom: 30%;
-  left: -5%;
-  width: 100px;
-  height: 100px;
-  transform: rotate(-20deg);
-}
-
-.chess-pattern {
-  position: relative;
-}
-
-.chess-pattern::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image:
-    linear-gradient(45deg, rgba(0, 0, 0, 0.05) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(0, 0, 0, 0.05) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.05) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.05) 75%);
-  background-size: 20px 20px;
-  background-position:
-    0 0,
-    0 10px,
-    10px -10px,
-    -10px 0px;
-  z-index: -1;
-  opacity: 0.5;
-}
-
-.elo-badge {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.elo-badge::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.elo-badge:hover::after {
-  opacity: 1;
-}
 
 .puzzle-badge {
   background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
@@ -374,60 +332,6 @@ const verb = computed(() => {
   );
   transform: translateX(-100%);
   animation: shimmer 2s infinite;
-}
-
-.progress-container {
-  position: relative;
-}
-
-.progress-container::before {
-  content: '';
-  position: absolute;
-  top: -10px;
-  left: 0;
-  width: 100%;
-  height: calc(100% + 20px);
-  background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%236366F1' fill-opacity='0.03' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
-  z-index: -1;
-}
-
-.top-bar {
-  position: relative;
-  overflow: hidden;
-}
-
-.top-bar::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
-  animation: pulse-light 5s infinite;
-}
-
-.chess-knight {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366F1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z'/%3E%3Cpath d='M13 21V7l-6 6'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-  opacity: 0.2;
-  z-index: 0;
-}
-
-.chess-knight-1 {
-  top: 10px;
-  right: 10px;
-  transform: rotate(15deg);
-}
-
-.chess-knight-2 {
-  bottom: 10px;
-  left: 10px;
-  transform: rotate(-15deg);
 }
 
 @keyframes shimmer {

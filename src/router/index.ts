@@ -15,6 +15,16 @@ const router = createRouter({
       component: () => import("../views/PuzzleFeedView.vue"),
     },
     {
+      path: "/onboarding",
+      name: "onboarding",
+      component: () => import("../views/PuzzleOnboarding.vue"),
+    },
+    {
+      path: "/treasure-reveal",
+      name: "treasureReveal",
+      component: () => import("../views/TreasureReveal.vue"),
+    },
+    {
       path: "/premium",
       name: "premium",
       component: () => import("../views/Paywall.vue"),

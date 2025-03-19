@@ -291,6 +291,7 @@ export const useUserStore = defineStore("user", () => {
           return null;
         }
         const random = Math.random();
+        console.log("random", random, hangingPiecePuzzle, mateIn1Puzzle);
         return random < 0.7
           ? hangingPiecePuzzle || mateIn1Puzzle
           : mateIn1Puzzle || hangingPiecePuzzle;
@@ -324,16 +325,6 @@ export const useUserStore = defineStore("user", () => {
     usedSolution: boolean,
     timeToSolve: number,
   ): Promise<void> {
-    console.log(
-      "Logging puzzle attempt:",
-      puzzleId,
-      initialElo,
-      newElo,
-      outcome,
-      usedHint,
-      usedSolution,
-      timeToSolve,
-    );
     try {
       const {
         data: { user },
@@ -343,16 +334,7 @@ export const useUserStore = defineStore("user", () => {
         console.warn("Cannot log puzzle attempt: No authenticated user");
         return;
       }
-      console.log(
-        "Logging puzzle attempt:",
-        puzzleId,
-        initialElo,
-        newElo,
-        outcome,
-        usedHint,
-        usedSolution,
-        timeToSolve,
-      );
+
       updateUserProfile();
 
       const { error } = await supabase.from("puzzle_attempts").insert({

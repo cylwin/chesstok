@@ -18,6 +18,8 @@ const props = defineProps<{
   puzzleRating: number
   // Border color for the board
   borderColor: string
+  // Whether the puzzle is onboarding
+  isOnboarding: boolean
 }>()
 
 // Timer state
@@ -221,11 +223,14 @@ function checkWinningMove(from: any, to: any, capture: any) {
     emit('solved', props.puzzleRating, currentNewElo, eloChange.value)
 
     // Wait 1.5 seconds before emitting next
-    setTimeout(() => {
-      usedHint.value = false
-      usedSolution.value = false
-      emit('next')
-    }, 1200)
+    setTimeout(
+      () => {
+        usedHint.value = false
+        usedSolution.value = false
+        emit('next')
+      },
+      props.isOnboarding ? 2000 : 1200,
+    )
   } else {
     // Wrong move!
     isFailed.value = true
@@ -334,7 +339,6 @@ function resetTimer() {
           :fen="fen"
           @board-created="onBoardCreated"
         />
-        {{ props.puzzleId }}
       </div>
     </div>
   </div>

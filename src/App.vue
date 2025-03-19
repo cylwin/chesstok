@@ -16,6 +16,9 @@ const route = useRoute()
 const isHomeView = computed(() => {
   return route.name === 'home'
 })
+const isOnboardingView = computed(() => {
+  return route.name === 'onboarding'
+})
 
 const goToHome = () => {
   router.push('/')
@@ -42,6 +45,7 @@ const goToPremium = () => {
             viewBox="0 0 24 24"
             stroke="currentColor"
             @click="goToHome"
+            v-if="!isOnboardingView"
           >
             <path
               stroke-linecap="round"

@@ -66,10 +66,38 @@ export const usePuzzleStore = defineStore("puzzle", () => {
         currentPuzzleTheme.value = parseTheme(data.Themes);
         // Preload the next puzzle
         userStore.getNewPuzzle().then((puzzleData) => {
+            console.log("Preloaded next puzzle", puzzleData);
             nextPuzzle.value = puzzleData;
             console.log("Preloaded next puzzle");
         });
         console.log("New puzzle loaded");
+
+        return data;
+    }
+
+    /**
+     * Get a specific puzzle by ID
+     */
+    async function getPuzzleById(puzzleId: string) {
+        // Fetch the specific puzzle
+        const { data, error } = await supabase
+            .from("puzzles")
+            .select("*")
+            .eq("PuzzleId", puzzleId)
+            .single();
+
+        if (error || !data) {
+            console.error("Failed to get puzzle by ID", error);
+            setFeedback("Could not load puzzle. Please try again.", "info");
+            return null;
+        }
+
+        // Set current puzzle data
+        fen.value = data.FEN;
+        winningMove.value = data.Moves;
+        puzzleRating.value = data.Rating || 600;
+        currentPuzzleId.value = data.PuzzleId || "";
+        currentPuzzleTheme.value = parseTheme(data.Themes);
 
         return data;
     }
@@ -106,8 +134,6 @@ export const usePuzzleStore = defineStore("puzzle", () => {
 
         // Record puzzle completion time
         const solveTime = timerStore.recordPuzzleCompletion();
-
-        setFeedback("Correct!", "success");
     }
 
     /**
@@ -136,9 +162,11 @@ export const usePuzzleStore = defineStore("puzzle", () => {
         showFeedback,
         feedbackType,
         currentPuzzleTheme,
+        nextPuzzle,
 
         // Actions
         getNewPuzzle,
+        getPuzzleById,
         setFeedback,
         handlePuzzleSolved,
         handlePuzzleFailed,
