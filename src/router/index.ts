@@ -24,6 +24,12 @@ const router = createRouter({
       name: "treasureReveal",
       component: () => import("../views/TreasureReveal.vue"),
     },
+    //level
+    {
+      path: "/levels",
+      name: "levels",
+      component: () => import("../views/LevelsView.vue"),
+    },
     {
       path: "/premium",
       name: "premium",
