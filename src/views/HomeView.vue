@@ -5,10 +5,11 @@ import DailyChallenge from '@/components/DailyChallenge.vue'
 import WeeklyProgress from '@/components/WeeklyProgress.vue'
 import LevelProgress from '@/components/LevelProgress.vue'
 import { usePaywallStore } from '@/stores/paywall'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const paywallStore = usePaywallStore()
-
+const userStore = useUserStore()
 const goToPuzzles = () => {
   router.push('/puzzles')
 }
@@ -82,20 +83,25 @@ const goToStats = () => {
 
     <!-- Daily Challenge Section -->
     <div class="mb-4 px-4">
-      <LevelProgress :level="3" :currentXp="12" :neededXp="200" />
+      <LevelProgress v-if="userStore.onboardingCompleted" />
     </div>
     <div class="mb-4 px-4">
-      <DailyChallenge />
+      <DailyChallenge v-if="userStore.onboardingCompleted" />
     </div>
     <div class="flex px-5">
       <ActionButton type="skip" label="Start Solving!" @click="goToPuzzles" />
       <!-- <ActionButton type="hint" label="HINT" @click="goToPuzzles" /> -->
     </div>
     <div class="mt-8 mb-4 px-4">
-      <WeeklyProgress />
+      <WeeklyProgress v-if="userStore.onboardingCompleted" />
     </div>
     <div class="flex px-5 mb-4">
-      <ActionButton type="hint" label="VIEW STATS" @click="goToStats" />
+      <ActionButton
+        type="hint"
+        label="VIEW STATS"
+        @click="goToStats"
+        v-if="userStore.onboardingCompleted"
+      />
     </div>
   </div>
 </template>

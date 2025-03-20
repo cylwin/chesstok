@@ -113,6 +113,7 @@ onMounted(async () => {
 
     // Calculate current ELO (most recent value)
     const currentElo = userStore.currentElo
+
     // Process eloHistory to ensure all days have values
     const processedEloHistory = dayKeys.map((day) => {
       // Find if we have data for this day
@@ -139,8 +140,10 @@ onMounted(async () => {
     // For the last day (today), use the current Elo from userStore
     const lastDayIndex = processedEloHistory.length - 1
     if (lastDayIndex >= 0) {
+      console.log('lastDayIndex', lastDayIndex)
       processedEloHistory[lastDayIndex].max_elo = currentElo
     }
+    console.log('processedEloHistory', processedEloHistory)
 
     // Replace the original eloHistory with the processed one
     eloHistory = processedEloHistory

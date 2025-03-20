@@ -3,23 +3,16 @@ import { supabase } from "@/services/supabase";
 import dayjs from "dayjs";
 import { defineStore } from "pinia";
 import { computed, onMounted, ref, watch } from "vue";
-
+import { useLevelStore } from "./levelStore";
 const INITIAL_ELO = 300;
 const DAILY_CHALLENGE_GOAL = 10;
 
-export interface UserState {
-  currentStreak: number;
-  longestStreak: number;
-  lastCompletedDate: string | null;
-  totalPuzzlesSolved: number;
-  totalXP: number;
-}
-
 export const useUserStore = defineStore("user", () => {
   const router = useRouter();
+  const levelStore = useLevelStore();
   // State
   const currentElo = ref(INITIAL_ELO);
-  const currentStreak = ref<number>(7);
+  const currentStreak = ref<number>(0);
   const highestStreak = ref(0);
   const puzzlesSolved = ref(0);
   const puzzlesAttempted = ref(0);
@@ -31,8 +24,10 @@ export const useUserStore = defineStore("user", () => {
 
   const longestStreak = ref<number>(7);
   const lastCompletedDate = ref<string | null>(null);
-  const totalPuzzlesSolved = ref<number>(32);
-  const totalXP = ref<number>(450);
+  const totalPuzzlesSolved = ref<number>(0);
+  const totalXP = ref<number>(0);
+
+  const onboardingCompleted = ref(false);
 
   const init = async () => {
     const { data } = await supabase.auth.getSession();
@@ -59,6 +54,7 @@ export const useUserStore = defineStore("user", () => {
         highest_streak: 0,
         daily_challenge_streak: 0,
         daily_challenge_last_day_completed: null,
+        onboarding_completed: false,
       }).select("*").single();
     }
     // If user profile data exists, update local state
@@ -80,10 +76,10 @@ export const useUserStore = defineStore("user", () => {
           }).eq("user_id", user?.id);
 
           // Update local state
-          dailyChallenge.value = 0;
+          dailyChallengeStreak.value = 0;
         } else {
           // Keep existing streak
-          dailyChallenge.value = userProfile.daily_challenge_streak || 0;
+          dailyChallengeStreak.value = userProfile.daily_challenge_streak || 0;
         }
       }
       const correctAttempts = await getCorrectAttempts();
@@ -93,6 +89,8 @@ export const useUserStore = defineStore("user", () => {
       currentStreak.value = userProfile.current_streak || 0;
       highestStreak.value = userProfile.highest_streak || 0;
       dailyChallengeStreak.value = userProfile.daily_challenge_streak || 0;
+      levelStore.totalXP = userProfile.total_xp || 0;
+      onboardingCompleted.value = userProfile.onboarding_completed || false;
     }
     if (dailyChallengeCurrentDate.value === null) {
       dailyChallengeCurrentDate.value = currentDate;
@@ -126,6 +124,8 @@ export const useUserStore = defineStore("user", () => {
       currentStreak.value,
       highestStreak.value,
       dailyChallenge.value,
+      levelStore.totalXP,
+      levelStore.currentLevel,
     );
     if (user) {
       await supabase.from(
@@ -134,15 +134,11 @@ export const useUserStore = defineStore("user", () => {
         elo: currentElo.value,
         current_streak: currentStreak.value,
         highest_streak: highestStreak.value,
-        daily_challenge_streak: dailyChallenge.value,
+        daily_challenge_streak: dailyChallengeStreak.value,
+        total_xp: levelStore.totalXP,
+        level: levelStore.currentLevel,
+        onboarding_completed: onboardingCompleted.value,
       }).eq("user_id", user.id);
-      console.log(
-        "Updated user profile:",
-        currentElo.value,
-        currentStreak.value,
-        highestStreak.value,
-        dailyChallenge.value,
-      );
 
       const correctAttempts = await getCorrectAttempts();
 
@@ -371,11 +367,12 @@ export const useUserStore = defineStore("user", () => {
     usedHint: boolean = false,
     usedSolution: boolean = false,
     timeToSolve: number = 0,
-  ): number {
+  ): { didLevelUp: boolean; newElo: number } {
     const initialElo = currentElo.value;
     const expectedScore = calculateExpectedScore(initialElo, puzzleRating);
     const actualScore = isCorrect ? 1 : 0;
     let newElo = calculateNewElo(initialElo, expectedScore, actualScore);
+    let didLevelUp = false;
     if (usedHint || usedSolution) {
       newElo = initialElo;
     } else {
@@ -387,7 +384,20 @@ export const useUserStore = defineStore("user", () => {
     if (isCorrect && !usedHint && !usedSolution) {
       puzzlesSolved.value++;
       dailyChallenge.value++;
+      console.log("Update current streak");
       currentStreak.value++;
+      let xpToAdd = 10;
+      if (currentStreak.value > 5) {
+        xpToAdd = 12;
+      } else if (currentStreak.value > 10) {
+        xpToAdd = 14;
+      }
+      if (dailyChallengeStreak.value > 5) {
+        xpToAdd += 2;
+      }
+
+      const { didLevelUp: didLevelUpFromXP } = levelStore.addXP(xpToAdd);
+      didLevelUp = didLevelUp || didLevelUpFromXP;
       // Update highest streak if current streak is higher
       if (currentStreak.value > highestStreak.value) {
         highestStreak.value = currentStreak.value;
@@ -408,16 +418,12 @@ export const useUserStore = defineStore("user", () => {
       timeToSolve,
     );
 
-    return newElo;
+    return { didLevelUp, newElo };
   }
 
   async function signInAnonymously(): Promise<void> {
     const { data, error } = await supabase.auth.signInAnonymously();
   }
-
-  // Getters
-  const streakXpBonus = computed(() => currentStreak.value * 5);
-  const dailyXpReward = computed(() => 50);
 
   // Actions
   function completeDailyChallenge() {
@@ -433,7 +439,6 @@ export const useUserStore = defineStore("user", () => {
 
       lastCompletedDate.value = today;
       totalPuzzlesSolved.value++;
-      totalXP.value += dailyXpReward.value + streakXpBonus.value;
     }
   }
 
@@ -457,10 +462,7 @@ export const useUserStore = defineStore("user", () => {
     lastCompletedDate,
     totalPuzzlesSolved,
     totalXP,
-
-    // Getters
-    streakXpBonus,
-    dailyXpReward,
+    onboardingCompleted,
 
     // Actions
     init,
@@ -470,5 +472,6 @@ export const useUserStore = defineStore("user", () => {
     getNewPuzzle,
     completeDailyChallenge,
     resetStreak,
+    updateUserProfile,
   };
 });

@@ -2,7 +2,7 @@
 import { computed, watch, ref } from 'vue'
 import NumberFlow, { continuous } from '@number-flow/vue'
 import LevelAvatar from '@/components/LevelAvatar.vue'
-
+import { useLevelStore } from '@/stores/levelStore'
 interface Props {
   elo: number
   label?: string
@@ -12,6 +12,7 @@ const props = withDefaults(defineProps<Props>(), {
   label: 'YOUR ELO',
 })
 
+const levelStore = useLevelStore()
 const eloDisplay = computed(() => props.elo)
 const previousElo = ref(props.elo)
 const eloDifference = ref<number | null>(null)
@@ -32,7 +33,7 @@ watch(eloDisplay, (newVal, oldVal) => {
 
 <template>
   <div class="flex items-center">
-    <LevelAvatar :level="9" />
+    <LevelAvatar :level="levelStore.currentLevel" />
     <div class="relative">
       <div class="font-black text-slate-800">{{ label }}</div>
       <div class="text-primary font-black text-xl flex items-center">

@@ -65,11 +65,11 @@ export const usePuzzleStore = defineStore("puzzle", () => {
         currentPuzzleId.value = data.PuzzleId || "";
         currentPuzzleTheme.value = parseTheme(data.Themes);
         // Preload the next puzzle
-        userStore.getNewPuzzle().then((puzzleData) => {
-            console.log("Preloaded next puzzle", puzzleData);
-            nextPuzzle.value = puzzleData;
-            console.log("Preloaded next puzzle");
-        });
+        // userStore.getNewPuzzle().then((puzzleData) => {
+        //     console.log("Preloaded next puzzle", puzzleData);
+        //     nextPuzzle.value = puzzleData;
+        //     console.log("Preloaded next puzzle");
+        // });
         console.log("New puzzle loaded");
 
         return data;

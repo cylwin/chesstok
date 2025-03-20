@@ -1,19 +1,49 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ref, onMounted } from 'vue'
+import { useLevelStore } from '@/stores/levelStore'
+import { ref, onMounted, computed } from 'vue'
 import ActionButton from '@/components/ActionButton.vue'
 import LevelAvatar from '@/components/LevelAvatar.vue'
 import confetti from 'canvas-confetti'
 import sparkleSound from '@/assets/sounds/magic-sparkle-transition.mp3'
 
 const router = useRouter()
-const playerLevel = ref(1)
+const levelStore = useLevelStore()
+const playerLevel = ref(levelStore.currentLevel)
 const showLevelUpAnimation = ref(false)
 const levelUpComplete = ref(false)
+const initialLevel = ref(levelStore.currentLevel)
 
 function continueJourney() {
-  router.push('/')
+  if (initialLevel.value === 1) {
+    router.push('/')
+  } else {
+    router.push('/puzzles')
+  }
 }
+
+const messageToDisplay = computed(() => {
+  if (initialLevel.value === 1) {
+    return 'Your journey to chess mastery has begun!'
+  }
+  const levelUpMessages = [
+    "You're thinking like a true tactician! Every puzzle solved sharpens your instincts. Keep going—your next breakthrough is just ahead!",
+    'You’re gaining momentum! Grandmasters don’t memorize—they see patterns. Solve more puzzles and unlock your chess intuition!',
+    'Your tactical vision is evolving! The best players don’t guess, they calculate. Keep sharpening your mind!',
+    'You’ve reached a new milestone! The deeper you go, the faster you think. Let’s push your skills even further!',
+    'You’re seeing the board differently now, aren’t you? Every puzzle solved rewires your brain for victory!',
+    'Your instincts are getting sharper! Chess isn’t about playing more—it’s about thinking better. Keep training!',
+    'You’ve entered the next league of thinkers! The best players don’t wait for opportunities, they create them. Keep solving!',
+    'You’re learning to see what others miss. Keep training, and soon you’ll predict moves before they happen!',
+    'Double digits! You’re no longer a beginner—your tactical skills are leveling up fast. Let’s go deeper!',
+    'Your mind is adapting to chess like never before! Every puzzle solved makes future games easier. Keep the streak alive!',
+    'Your calculation speed is increasing! The more you train, the less you rely on luck. Keep sharpening your edge!',
+    'You’re entering the realm of serious players! The best are just a few puzzles ahead—catch up!',
+    'Your puzzle mastery is reaching new heights! Patterns and traps are becoming second nature. Let’s go further!',
+    'You’re building the mind of a grandmaster. Every position you crack brings you closer to true mastery. Keep going!',
+  ]
+  return levelUpMessages[(initialLevel.value - 1) % levelUpMessages.length]
+})
 
 function triggerLevelUp() {
   showLevelUpAnimation.value = true
@@ -61,6 +91,8 @@ function triggerLevelUp() {
 }
 
 onMounted(() => {
+  playerLevel.value = levelStore.currentLevel - 1
+  initialLevel.value = levelStore.currentLevel - 1
   const audio = new Audio(sparkleSound)
   setTimeout(() => {
     audio.play()
@@ -78,9 +110,16 @@ onMounted(() => {
     <!-- Treasure chest or reward graphic -->
     <div class="treasure-container relative mb-8 mt-8">
       <img
+        v-if="initialLevel === 1"
         src="@/assets/treasures/treasure-chest.png"
         alt="Treasure Chest"
         class="w-48 h-48 object-contain"
+      />
+      <img
+        v-else
+        src="@/assets/treasures/levelup.png"
+        alt="Level Up"
+        class="w-60 h-60 object-contain"
       />
 
       <!-- Glow effect -->
@@ -99,7 +138,7 @@ onMounted(() => {
     <!-- Level Up Message -->
     <div v-if="levelUpComplete" class="level-up-message mb-8 text-center">
       <h1 class="text-5xl font-extrabold text-white mb-4">LEVEL UP!</h1>
-      <p class="text-xl text-yellow-300">Your journey to chess mastery has begun!</p>
+      <p class="text-xl text-yellow-300">{{ messageToDisplay }}</p>
       <!-- <div class="unlocked-features mt-6 bg-white/10 p-4 rounded-lg backdrop-blur-sm">
         <h3 class="text-xl text-yellow-400 mb-2">New Features Unlocked:</h3>
         <ul class="text-white text-left">

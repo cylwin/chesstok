@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import ActionButton from '@/components/ActionButton.vue'
 import DailyStreakProgress from '@/components/DailyStreakProgress.vue'
 import confetti from 'canvas-confetti'
-
+import magicWandSparkle from '@/assets/sounds/magic-wand-sparkle.mp3'
 const router = useRouter()
 
 const continueSolving = () => {
@@ -13,7 +13,9 @@ const continueSolving = () => {
 
 // Trigger confetti when the component is mounted
 onMounted(() => {
-  // Trigger confetti
+  const audio = new Audio(magicWandSparkle)
+  audio.play()
+
   confetti({
     particleCount: 100,
     spread: 70,

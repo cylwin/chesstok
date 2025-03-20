@@ -1,23 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from 'vue'
+import { useLevelStore } from '../stores/levelStore'
 
-// Props for component configuration
+// Get level data from store instead of props
+const levelStore = useLevelStore()
+
+// Only keep the animate prop since it's a UI preference
 const props = defineProps({
-  // Current level
-  level: {
-    type: Number,
-    required: true,
-  },
-  // Current XP amount
-  currentXp: {
-    type: Number,
-    required: true,
-  },
-  // XP needed to level up
-  neededXp: {
-    type: Number,
-    required: true,
-  },
   // If true, animates the progress; if false, displays immediately
   animate: {
     type: Boolean,
@@ -30,21 +19,21 @@ const animatedProgress = ref(0)
 
 const progressPercentage = computed(() => {
   // Limit percentage to 100% maximum
-  return Math.min((animatedProgress.value / props.neededXp) * 100, 100)
+  return Math.min((animatedProgress.value / levelStore.totalXPtoNextLevel) * 100, 100)
 })
 
 // Function to animate the progress
 const animateProgress = (startAt = 0) => {
   // If animation is disabled, set the value directly
   if (!props.animate) {
-    animatedProgress.value = props.currentXp
+    animatedProgress.value = levelStore.currentXPInLevel
     return
   }
 
   // Calculate duration based on the value to animate (with a reasonable maximum)
-  const duration = Math.min(2000, props.currentXp * 50)
+  const duration = Math.min(2000, levelStore.currentXPInLevel * 50)
   const start = startAt
-  const end = props.currentXp
+  const end = levelStore.currentXPInLevel
   const startTime = Date.now()
 
   const animate = () => {
@@ -64,7 +53,7 @@ const animateProgress = (startAt = 0) => {
 
 // Reset animation if progress value changes
 watch(
-  () => props.currentXp,
+  () => levelStore.currentXPInLevel,
   (_, oldValue) => {
     animateProgress(oldValue)
   },
@@ -87,7 +76,7 @@ onMounted(() => {
         <div
           class="w-12 h-12 flex flex-col items-center justify-center rounded-md shadow-md bg-gradient-to-r from-[#6366f1] to-[#4f46e5]"
         >
-          <span class="text-white font-bold text-lg">{{ level }}</span>
+          <span class="text-white font-bold text-lg">{{ levelStore.currentLevel }}</span>
         </div>
         <div class="text-xs font-semibold mt-1 text-center text-[#4f46e5]">Current</div>
       </div>
@@ -106,7 +95,7 @@ onMounted(() => {
       </div>
       <div class="flex justify-center items-center absolute top-2/3 left-10 right-10">
         <div class="bg-blue-100 text-[#6366f1] px-3 py-1 rounded-full font-bold text-xs">
-          {{ Math.floor(animatedProgress) }} / {{ neededXp }} XP
+          {{ Math.floor(animatedProgress) }} / {{ levelStore.totalXPtoNextLevel }} XP
         </div>
       </div>
       <!-- Next level box at the end -->
@@ -114,25 +103,26 @@ onMounted(() => {
         <div
           class="w-12 h-12 flex flex-col items-center justify-center rounded-md shadow-md"
           :class="{
-            'bg-gray-200': props.currentXp < props.neededXp,
-            'bg-gradient-to-r from-[#6366f1] to-[#4f46e5]': props.currentXp >= props.neededXp,
+            'bg-gray-200': levelStore.currentXPInLevel < levelStore.neededXPtoNextLevel,
+            'bg-gradient-to-r from-[#6366f1] to-[#4f46e5]':
+              levelStore.currentXPInLevel >= levelStore.neededXPtoNextLevel,
           }"
         >
           <span
             class="font-bold text-lg"
             :class="{
-              'text-gray-400': props.currentXp < props.neededXp,
-              'text-white': props.currentXp >= props.neededXp,
+              'text-gray-400': levelStore.currentXPInLevel < levelStore.neededXPtoNextLevel,
+              'text-white': levelStore.currentXPInLevel >= levelStore.neededXPtoNextLevel,
             }"
           >
-            {{ level + 1 }}
+            {{ levelStore.currentLevel + 1 }}
           </span>
         </div>
         <div
           class="text-xs font-semibold mt-1 text-center"
           :class="{
-            'text-gray-500': props.currentXp < props.neededXp,
-            'text-[#4f46e5]': props.currentXp >= props.neededXp,
+            'text-gray-500': levelStore.currentXPInLevel < levelStore.neededXPtoNextLevel,
+            'text-[#4f46e5]': levelStore.currentXPInLevel >= levelStore.neededXPtoNextLevel,
           }"
         >
           Next

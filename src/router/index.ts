@@ -20,15 +20,9 @@ const router = createRouter({
       component: () => import("../views/PuzzleOnboarding.vue"),
     },
     {
-      path: "/treasure-reveal",
-      name: "treasureReveal",
-      component: () => import("../views/TreasureReveal.vue"),
-    },
-    //level
-    {
-      path: "/levels",
-      name: "levels",
-      component: () => import("../views/LevelsView.vue"),
+      path: "/level-up",
+      name: "levelUp",
+      component: () => import("../views/LevelUp.vue"),
     },
     {
       path: "/premium",

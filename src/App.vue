@@ -2,7 +2,6 @@
 import { computed, onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { supabase } from '@/services/supabase'
 import { usePaywallStore } from '@/stores/paywall'
 const router = useRouter()
 
@@ -11,6 +10,10 @@ const paywallStore = usePaywallStore()
 onMounted(async () => {
   const userStore = useUserStore()
   await userStore.init()
+  console.log('userStore.onboardingCompleted', userStore.onboardingCompleted)
+  if (!userStore.onboardingCompleted) {
+    router.push('/onboarding')
+  }
 })
 const route = useRoute()
 const isHomeView = computed(() => {

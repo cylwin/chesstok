@@ -4,11 +4,13 @@ import ChessPuzzle from '../components/ChessPuzzle.vue'
 import ActionButton from '../components/ActionButton.vue'
 import TreasureProgress from '../components/TreasureProgress.vue'
 import { usePuzzleStore } from '@/stores'
+import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
 import confetti from 'canvas-confetti'
 
 const puzzleRef = ref<InstanceType<typeof ChessPuzzle> | null>(null)
 const puzzleStore = usePuzzleStore()
+const userStore = useUserStore()
 const router = useRouter()
 const treasureProgress = ref(0)
 
@@ -77,7 +79,9 @@ const onboardingFeedbackMessage = computed(() => {
 function handlePuzzleNext() {
   currentPuzzleIndex.value++
   if (currentPuzzleIndex.value >= onboardingPuzzles.length) {
-    router.push('/treasure-reveal') // Redirect to home after completing all puzzles
+    userStore.onboardingCompleted = true
+    userStore.updateUserProfile()
+    router.push('/level-up')
   } else {
     // Load next puzzle
     puzzleStore.getPuzzleById(onboardingPuzzles[currentPuzzleIndex.value])

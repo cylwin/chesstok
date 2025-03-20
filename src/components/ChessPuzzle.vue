@@ -7,6 +7,8 @@ import { useUserStore } from '@/stores'
 import standardMove from '@/assets/sounds/standard_Move.mp3'
 import ringtoneCorrect from '@/assets/sounds/ringtone-correct.mp3'
 import boinkWrong from '@/assets/sounds/boink-wrong.mp3'
+import { useRouter } from 'vue-router'
+
 const props = defineProps<{
   // FEN string representing the puzzle position
   fen: string
@@ -27,13 +29,7 @@ const elapsedTime = ref<number>(0)
 const timerInterval = ref<number | null>(null)
 const formattedTime = ref<string>('0.0')
 
-// Format time as MM:SS
-const formattedTimeMMSS = computed(() => {
-  const totalSeconds = Math.floor(elapsedTime.value)
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-})
+const router = useRouter()
 
 // Initialize user store
 const userStore = useUserStore()
@@ -44,8 +40,6 @@ const boardAPI = ref<BoardApi | null>(null)
 const isSolved = ref(false)
 // Track if the puzzle is failed (wrong move)
 const isFailed = ref(false)
-// Track highlighted squares for hints
-const highlightedSquares = ref<string[]>([])
 // Track the new Elo after solving
 const newElo = ref<number | null>(null)
 // Track Elo change after solving
@@ -208,7 +202,7 @@ function checkWinningMove(from: any, to: any, capture: any) {
     playSound('correct')
     // Calculate Elo change using the user store
     const oldElo = userStore.currentElo
-    const currentNewElo = userStore.updateEloAfterPuzzle(
+    const { newElo: currentNewElo, didLevelUp } = userStore.updateEloAfterPuzzle(
       props.puzzleId,
       props.puzzleRating,
       true,
@@ -227,7 +221,11 @@ function checkWinningMove(from: any, to: any, capture: any) {
       () => {
         usedHint.value = false
         usedSolution.value = false
-        emit('next')
+        if (!didLevelUp) {
+          emit('next')
+        } else {
+          router.push('/level-up')
+        }
       },
       props.isOnboarding ? 2000 : 1200,
     )
@@ -238,7 +236,7 @@ function checkWinningMove(from: any, to: any, capture: any) {
     playSound('incorrect')
     // Calculate Elo change using the user store
     const oldElo = userStore.currentElo
-    const currentNewElo = userStore.updateEloAfterPuzzle(
+    const { newElo: currentNewElo } = userStore.updateEloAfterPuzzle(
       props.puzzleId,
       props.puzzleRating,
       false,
