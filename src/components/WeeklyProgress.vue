@@ -174,7 +174,7 @@ const chartOptions = {
   scales: {
     y: {
       beginAtZero: true,
-      max: 1200,
+      max: 1600,
       grid: {
         color: '#e5e7eb', // Tailwind gray-200
       },
