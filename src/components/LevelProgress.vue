@@ -66,67 +66,52 @@ onMounted(() => {
 </script>
 
 <template>
-  <h2 class="text-xl font-bold text-slate-700 flex-1">Level Progress</h2>
-  <div
-    class="bg-white rounded-xl shadow-md px-6 py-2 my-2 w-full border border-indigo-200 bg-gradient-to-b from-white to-indigo-50/80"
-  >
-    <div class="relative h-16 mb-4">
-      <!-- Level box at the start -->
-      <div class="absolute top-2 left-0 z-10">
-        <div
-          class="w-12 h-12 flex flex-col items-center justify-center rounded-md shadow-md bg-gradient-to-r from-[#6366f1] to-[#4f46e5]"
-        >
-          <span class="text-white font-bold text-lg">{{ levelStore.currentLevel }}</span>
-        </div>
-        <div class="text-xs font-semibold mt-1 text-center text-[#4f46e5]">Current</div>
-      </div>
-
-      <!-- Progress bar background -->
+  <div class="relative h-16 mb-4">
+    <!-- Level box at the start -->
+    <div class="absolute top-4 left-0 z-10">
       <div
-        class="absolute top-1/2 left-10 right-10 h-3 bg-gray-200 transform -translate-y-1/2 rounded-full"
+        class="w-8 h-8 flex flex-col items-center justify-center rounded-md shadow-md bg-gradient-to-r from-[#6366f1] to-[#4f46e5]"
       >
-        <!-- Fill based on current progress -->
-        <div
-          class="h-full bg-gradient-to-r from-[#6366f1] to-[#4f46e5] rounded-full"
-          :style="{
-            width: `${progressPercentage}%`,
-          }"
-        ></div>
+        <span class="text-white font-bold text-lg">{{ levelStore.currentLevel }}</span>
       </div>
-      <div class="flex justify-center items-center absolute top-2/3 left-10 right-10">
-        <div class="bg-blue-100 text-[#6366f1] px-3 py-1 rounded-full font-bold text-xs">
-          {{ Math.floor(animatedProgress) }} / {{ levelStore.totalXPtoNextLevel }} XP
-        </div>
+    </div>
+
+    <!-- Progress bar background -->
+    <div
+      class="absolute top-1/2 left-7 right-9 h-3 bg-gray-200 transform -translate-y-1/2 rounded-full"
+    >
+      <!-- Fill based on current progress -->
+      <div
+        class="h-full bg-gradient-to-r from-[#6366f1] to-[#4f46e5] rounded-full"
+        :style="{
+          width: `${progressPercentage}%`,
+        }"
+      ></div>
+    </div>
+    <div class="flex justify-center items-center absolute top-2/3 left-10 right-10">
+      <div class="bg-blue-100 text-[#6366f1] px-3 py-1 rounded-full font-bold text-xs">
+        {{ Math.floor(animatedProgress) }} / {{ levelStore.totalXPtoNextLevel }} XP
       </div>
-      <!-- Next level box at the end -->
-      <div class="absolute top-1 right-6" style="transform: translateX(50%)">
-        <div
-          class="w-12 h-12 flex flex-col items-center justify-center rounded-md shadow-md"
+    </div>
+    <!-- Next level box at the end -->
+    <div class="absolute top-4 right-6" style="transform: translateX(50%)">
+      <div
+        class="w-8 h-8 flex flex-col items-center justify-center rounded-md shadow-md"
+        :class="{
+          'bg-gray-200': levelStore.currentXPInLevel < levelStore.neededXPtoNextLevel,
+          'bg-gradient-to-r from-[#6366f1] to-[#4f46e5]':
+            levelStore.currentXPInLevel >= levelStore.neededXPtoNextLevel,
+        }"
+      >
+        <span
+          class="font-bold text-lg"
           :class="{
-            'bg-gray-200': levelStore.currentXPInLevel < levelStore.neededXPtoNextLevel,
-            'bg-gradient-to-r from-[#6366f1] to-[#4f46e5]':
-              levelStore.currentXPInLevel >= levelStore.neededXPtoNextLevel,
+            'text-gray-400': levelStore.currentXPInLevel < levelStore.neededXPtoNextLevel,
+            'text-white': levelStore.currentXPInLevel >= levelStore.neededXPtoNextLevel,
           }"
         >
-          <span
-            class="font-bold text-lg"
-            :class="{
-              'text-gray-400': levelStore.currentXPInLevel < levelStore.neededXPtoNextLevel,
-              'text-white': levelStore.currentXPInLevel >= levelStore.neededXPtoNextLevel,
-            }"
-          >
-            {{ levelStore.currentLevel + 1 }}
-          </span>
-        </div>
-        <div
-          class="text-xs font-semibold mt-1 text-center"
-          :class="{
-            'text-gray-500': levelStore.currentXPInLevel < levelStore.neededXPtoNextLevel,
-            'text-[#4f46e5]': levelStore.currentXPInLevel >= levelStore.neededXPtoNextLevel,
-          }"
-        >
-          Next
-        </div>
+          {{ levelStore.currentLevel + 1 }}
+        </span>
       </div>
     </div>
   </div>

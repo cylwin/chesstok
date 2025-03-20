@@ -5,6 +5,7 @@ import ActionButton from '@/components/ActionButton.vue'
 import DailyStreakProgress from '@/components/DailyStreakProgress.vue'
 import confetti from 'canvas-confetti'
 import magicWandSparkle from '@/assets/sounds/magic-wand-sparkle.mp3'
+
 const router = useRouter()
 
 const continueSolving = () => {
@@ -30,6 +31,11 @@ onMounted(() => {
       <!-- Congratulations header -->
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-indigo-600 mb-2">Challenge Complete!</h1>
+        <img
+          src="@/assets/treasures/daily-challenge.png"
+          alt="Chess Puzzles"
+          class="h-64 object-contain"
+        />
         <p class="text-lg text-slate-600">Great job! You've completed today's daily challenge.</p>
       </div>
 

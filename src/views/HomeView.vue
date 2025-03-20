@@ -82,8 +82,13 @@ const goToStats = () => {
     </div>
 
     <!-- Daily Challenge Section -->
-    <div class="mb-4 px-4">
-      <LevelProgress v-if="userStore.onboardingCompleted" />
+    <div class="mb-4 px-4" v-if="userStore.onboardingCompleted">
+      <h2 class="text-xl font-bold text-slate-700 flex-1">Level Progress</h2>
+      <div
+        class="bg-white rounded-xl shadow-md px-6 py-2 my-2 w-full border border-indigo-200 bg-gradient-to-b from-white to-indigo-50/80"
+      >
+        <LevelProgress />
+      </div>
     </div>
     <div class="mb-4 px-4">
       <DailyChallenge v-if="userStore.onboardingCompleted" />

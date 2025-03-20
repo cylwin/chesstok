@@ -30,6 +30,11 @@ const router = createRouter({
       component: () => import("../views/Paywall.vue"),
     },
     {
+      path: "/welcome",
+      name: "welcome",
+      component: () => import("../views/WelcomeScreen.vue"),
+    },
+    {
       path: "/challenge-completed",
       name: "challengeCompleted",
       component: () => import("../views/DailyChallengeCompletedView.vue"),

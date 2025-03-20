@@ -4,10 +4,10 @@ import ChessPuzzle from '../components/ChessPuzzle.vue'
 import UserEloBadge from '../components/UserEloBadge.vue'
 import StreakFlame from '../components/StreakFlame.vue'
 import ProgressBar from '../components/ProgressBar.vue'
+import LevelProgress from '../components/LevelProgress.vue'
 import { useUserStore, useTimerStore, usePuzzleStore } from '@/stores'
 import { useRouter } from 'vue-router'
 import confetti from 'canvas-confetti'
-
 // Reference to the puzzle component
 const puzzleRef = ref<InstanceType<typeof ChessPuzzle> | null>(null)
 
@@ -241,13 +241,16 @@ function handlePuzzleSolved(rating: number, newElo: number, eloChange: number) {
 
   <!-- Progress Bar -->
   <div class="flex px-5 pb-8 items-start">
-    <div class="flex-1 pt-6 pr-4">
+    <div class="flex-1 pr-4">
       <ProgressBar
+        class="mt-6"
         :completed="dailyProgress.completed"
         :total="dailyProgress.total"
         label="DAILY PROGRESS"
         suffix="PUZZLES"
+        v-if="dailyProgress.completed < dailyProgress.total"
       />
+      <LevelProgress v-else />
     </div>
     <StreakFlame :currentStreak="userStore.currentStreak" :thresholds="streakThresholds" />
   </div>

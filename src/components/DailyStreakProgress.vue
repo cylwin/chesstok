@@ -177,9 +177,7 @@ onMounted(() => {
         </div>
         <div>
           <h3 class="font-bold text-slate-700">Stay consistent!</h3>
-          <p class="text-sm text-slate-600">
-            Come back tomorrow to continue your streak. Every 7 days unlocks new achievements!
-          </p>
+          <p class="text-sm text-slate-600">Come back tomorrow to continue your streak.</p>
         </div>
       </div>
     </div>

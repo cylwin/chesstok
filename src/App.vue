@@ -22,6 +22,9 @@ const isHomeView = computed(() => {
 const isOnboardingView = computed(() => {
   return route.name === 'onboarding'
 })
+const isWelcomeView = computed(() => {
+  return route.name === 'welcome'
+})
 
 const goToHome = () => {
   router.push('/')
@@ -38,7 +41,7 @@ const goToPremium = () => {
     <div class="app-container min-h-screen overflow-hidden">
       <div
         class="top-bar bg-gradient-to-r from-[#6366F1] to-purple-500 text-white p-4 flex justify-between items-center relative"
-        v-if="!isHomeView"
+        v-if="!isHomeView && !isWelcomeView"
       >
         <div class="flex items-center">
           <svg
