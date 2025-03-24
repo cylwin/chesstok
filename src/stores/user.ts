@@ -2,7 +2,7 @@ import { useRouter } from "vue-router";
 import { supabase } from "@/services/supabase";
 import dayjs from "dayjs";
 import { defineStore } from "pinia";
-import { computed, onMounted, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import { useLevelStore } from "./levelStore";
 const INITIAL_ELO = 300;
 const DAILY_CHALLENGE_GOAL = 10;
@@ -24,7 +24,6 @@ export const useUserStore = defineStore("user", () => {
 
   const longestStreak = ref<number>(7);
   const lastCompletedDate = ref<string | null>(null);
-  const totalPuzzlesSolved = ref<number>(0);
   const totalXP = ref<number>(0);
 
   const onboardingCompleted = ref(false);
@@ -224,6 +223,7 @@ export const useUserStore = defineStore("user", () => {
           .from("puzzle_attempts")
           .select("puzzle_id")
           .eq("user_id", user?.id);
+
         // Single query with a NOT EXISTS approach
         const [hangingPieceResult, mateIn1Result] = await Promise.all([
           supabase
@@ -439,7 +439,6 @@ export const useUserStore = defineStore("user", () => {
       }
 
       lastCompletedDate.value = today;
-      totalPuzzlesSolved.value++;
     }
   }
 
@@ -461,7 +460,6 @@ export const useUserStore = defineStore("user", () => {
     DAILY_CHALLENGE_GOAL,
     longestStreak,
     lastCompletedDate,
-    totalPuzzlesSolved,
     totalXP,
     onboardingCompleted,
 

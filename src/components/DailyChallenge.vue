@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import ProgressBar from './ProgressBar.vue'
-import { useUserStore } from '@/stores'
+import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
 

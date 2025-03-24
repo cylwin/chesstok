@@ -7,10 +7,15 @@ import LevelProgress from '@/components/LevelProgress.vue'
 import Footer from '@/components/Footer.vue'
 import { usePaywallStore } from '@/stores/paywall'
 import { useUserStore } from '@/stores/user'
+import { useAppStoreReviewStore } from '@/stores/appstoreReview'
+import { computed, onMounted } from 'vue'
+import OneSignal from 'onesignal-cordova-plugin'
+import { Capacitor } from '@capacitor/core'
 
 const router = useRouter()
 const paywallStore = usePaywallStore()
 const userStore = useUserStore()
+const appReviewStore = useAppStoreReviewStore()
 const goToPuzzles = () => {
   router.push('/puzzles')
 }
@@ -22,12 +27,23 @@ const goToPremium = () => {
 const goToStats = () => {
   router.push('/stats')
 }
+onMounted(async () => {
+  await appReviewStore.initialize()
+  appReviewStore.maybeAskForRating()
+  setTimeout(() => {
+    OneSignal.Notifications.requestPermission(false)
+  }, 2000)
+})
+const isIOS = computed(() => {
+  return Capacitor.getPlatform() === 'ios'
+})
 </script>
 
 <template>
   <div class="">
     <div
-      class="pt-5 flex items-center justify-between mb-4 bg-gradient-to-r from-[#6366F1] to-purple-500 text-white relative overflow-hidden animate-gradient"
+      class="flex items-center justify-between mb-4 bg-gradient-to-r from-[#6366F1] to-purple-500 text-white relative overflow-hidden animate-gradient"
+      :class="[isIOS ? 'pt-20' : 'pt-5']"
     >
       <!-- Animated background sparkles -->
       <div class="absolute inset-0 overflow-hidden">

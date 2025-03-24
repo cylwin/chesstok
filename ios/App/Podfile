@@ -1,6 +1,6 @@
 require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
-platform :ios, '14.0'
+platform :ios, '16.0'
 use_frameworks!
 
 # workaround to avoid Xcode caching of Pods that requires
@@ -11,7 +11,9 @@ install! 'cocoapods', :disable_input_output_paths => true
 def capacitor_pods
   pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
   pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
-
+  pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'
+  pod 'CapacitorPreferences', :path => '../../node_modules/@capacitor/preferences'
+  pod 'CordovaPluginsStatic', :path => '../capacitor-cordova-ios-plugins'
 end
 
 target 'App' do
@@ -21,4 +23,8 @@ end
 
 post_install do |installer|
   assertDeploymentTarget(installer)
+end
+
+target 'OneSignalNotificationServiceExtension' do
+  pod 'OneSignalXCFramework', '>= 5.0', '< 6.0'
 end

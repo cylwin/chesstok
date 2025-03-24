@@ -1,20 +1,33 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { usePaywallStore } from '@/stores/paywall'
+import { useAppStoreReviewStore } from '@/stores/appstoreReview'
+import { Capacitor } from '@capacitor/core'
+
 const router = useRouter()
+const isIOS = ref(false)
 
 const paywallStore = usePaywallStore()
+const appReviewStore = useAppStoreReviewStore()
 
 onMounted(async () => {
   const userStore = useUserStore()
   await userStore.init()
   console.log('userStore.onboardingCompleted', userStore.onboardingCompleted)
   if (!userStore.onboardingCompleted) {
-    router.push('/onboarding')
+    router.push('/welcome')
   }
+
+  // Use Capacitor's platform detection
+  isIOS.value = Capacitor.getPlatform() === 'ios'
 })
+
+onBeforeUnmount(() => {
+  appReviewStore.cleanup()
+})
+
 const route = useRoute()
 const isHomeView = computed(() => {
   return route.name === 'home'
@@ -40,7 +53,11 @@ const goToPremium = () => {
     <!-- Top Bar -->
     <div class="app-container min-h-screen overflow-hidden">
       <div
-        class="top-bar bg-gradient-to-r from-[#6366F1] to-purple-500 text-white p-4 flex justify-between items-center relative"
+        v-if="isIOS && !isHomeView && !isWelcomeView"
+        class="h-12 bg-gradient-to-r from-[#6366F1] to-purple-500"
+      ></div>
+      <div
+        class="top-bar bg-gradient-to-r from-[#6366F1] to-purple-500 text-white flex justify-between items-center relative p-4"
         v-if="!isHomeView && !isWelcomeView"
       >
         <div class="flex items-center">
@@ -73,7 +90,6 @@ const goToPremium = () => {
           <span>Premium</span>
         </button>
       </div>
-
       <main class="flex-1">
         <RouterView />
       </main>

@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { supabase } from "../services/supabase";
-import { useTimerStore, useUserStore } from "@/stores";
+import { useTimerStore } from "@/stores/timer";
+import { useUserStore } from "@/stores/user";
 
 const parseTheme = (themes: string) => {
     if (themes.includes("mateIn1")) {
