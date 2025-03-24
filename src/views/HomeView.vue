@@ -4,6 +4,7 @@ import ActionButton from '@/components/ActionButton.vue'
 import DailyChallenge from '@/components/DailyChallenge.vue'
 import WeeklyProgress from '@/components/WeeklyProgress.vue'
 import LevelProgress from '@/components/LevelProgress.vue'
+import Footer from '@/components/Footer.vue'
 import { usePaywallStore } from '@/stores/paywall'
 import { useUserStore } from '@/stores/user'
 
@@ -81,6 +82,98 @@ const goToStats = () => {
       </button>
     </div>
 
+    <!-- Create Account Box -->
+    <div class="px-4 mb-6">
+      <div
+        class="relative bg-gradient-to-br from-indigo-50 to-slate-100 rounded-xl border border-indigo-200 shadow-md p-4 overflow-hidden"
+      >
+        <!-- Decorative elements -->
+        <div
+          class="absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 bg-yellow-400/20 rounded-full blur-2xl"
+        ></div>
+        <div
+          class="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 bg-indigo-400/20 rounded-full blur-xl"
+        ></div>
+
+        <!-- Alert icon and message -->
+        <div class="flex items-start mb-3">
+          <div class="flex-shrink-0 bg-indigo-100 p-1.5 rounded-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-indigo-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-slate-800">Don't lose your progress!</h3>
+            <p class="mt-1 text-xs text-slate-600">
+              Create an account to save your ratings, puzzles solved, and maintain your winning
+              streak.
+            </p>
+          </div>
+        </div>
+
+        <!-- Button -->
+        <button
+          @click="router.push('/login')"
+          class="w-full bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center group overflow-hidden relative"
+        >
+          <span
+            class="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-all duration-300"
+          ></span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6 mr-2 text-white/90"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+            />
+          </svg>
+          <span>Create Your Account</span>
+          <span
+            class="ml-2 bg-white/20 rounded-full w-6 h-6 flex items-center justify-center group-hover:bg-white/30 transition-all duration-300"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </span>
+        </button>
+
+        <!-- Optional badge -->
+        <div
+          class="absolute top-1 right-1 bg-yellow-400 text-xs text-slate-800 font-bold px-2 py-1 rounded-full shadow-sm z-10"
+        >
+          FREE!
+        </div>
+      </div>
+    </div>
+
     <!-- Daily Challenge Section -->
     <div class="mb-4 px-4" v-if="userStore.onboardingCompleted">
       <h2 class="text-xl font-bold text-slate-700 flex-1">Level Progress</h2>
@@ -108,6 +201,7 @@ const goToStats = () => {
         v-if="userStore.onboardingCompleted"
       />
     </div>
+    <Footer view="home" />
   </div>
 </template>
 

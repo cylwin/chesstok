@@ -77,9 +77,11 @@ const onboardingFeedbackMessage = computed(() => {
 })
 
 function handlePuzzleNext() {
+  console.log('handlePuzzleNext')
   currentPuzzleIndex.value++
   if (currentPuzzleIndex.value >= onboardingPuzzles.length) {
     userStore.onboardingCompleted = true
+    console.log('onboarding completed')
     userStore.updateUserProfile()
     router.push('/level-up')
   } else {

@@ -16,7 +16,7 @@ const initialLevel = ref(levelStore.currentLevel)
 
 function continueJourney() {
   if (initialLevel.value === 1) {
-    router.push('/')
+    router.push('/login')
   } else {
     router.push('/puzzles')
   }

@@ -35,6 +35,11 @@ const router = createRouter({
       component: () => import("../views/WelcomeScreen.vue"),
     },
     {
+      path: "/login",
+      name: "login",
+      component: () => import("../views/Login.vue"),
+    },
+    {
       path: "/challenge-completed",
       name: "challengeCompleted",
       component: () => import("../views/DailyChallengeCompletedView.vue"),

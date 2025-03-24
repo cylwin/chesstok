@@ -221,7 +221,7 @@ function checkWinningMove(from: any, to: any, capture: any) {
       () => {
         usedHint.value = false
         usedSolution.value = false
-        if (!didLevelUp) {
+        if (!didLevelUp || props.isOnboarding) {
           emit('next')
         } else {
           router.push('/level-up')

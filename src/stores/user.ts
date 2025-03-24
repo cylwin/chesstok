@@ -126,6 +126,7 @@ export const useUserStore = defineStore("user", () => {
       dailyChallenge.value,
       levelStore.totalXP,
       levelStore.currentLevel,
+      onboardingCompleted.value,
     );
     if (user) {
       await supabase.from(
