@@ -15,7 +15,7 @@ const router = useRouter()
 const treasureProgress = ref(0)
 
 // Fixed puzzles for onboarding
-const onboardingPuzzles = ['01GC2', '074Yd', '1aIgX']
+const onboardingPuzzles = ['onb_1', 'onb_2', 'onb_3']
 const currentPuzzleIndex = ref(0)
 
 // Get the orientation based on whose turn it is in the FEN
